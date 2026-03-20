@@ -13,7 +13,7 @@ import FavoriteArtist from '#models/favorite_artist'
 import Comment from '#models/comment'
 import Rating from '#models/rating'
 
-const AuthFinder = withAuthFinder(() => hash.use('argon2'), {
+const AuthFinder = withAuthFinder(() => hash.use('argon'), {
   uids: ['email'],
   passwordColumnName: 'password',
 })
