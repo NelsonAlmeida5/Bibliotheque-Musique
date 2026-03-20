@@ -1,32 +1,35 @@
-import { DateTime } from 'luxon'
-import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
-import type { BelongsTo } from '@adonisjs/lucid/types/relations'
+import { BaseSchema } from '@adonisjs/lucid/schema'
 
-import User from '#models/user'
-import Track from '#models/track'
+export default class extends BaseSchema {
+  protected tableName = 'comments'
 
-export default class Comment extends BaseModel {
-  @column({ isPrimary: true })
-  declare id: number
+  async up() {
+    this.schema.createTable(this.tableName, (table) => {
+      table.increments('id').notNullable()
+      table.text('content').notNullable()
 
-  @column()
-  declare content: string
+      table
+        .integer('track_id')
+        .unsigned()
+        .notNullable()
+        .references('id')
+        .inTable('tracks')
+        .onDelete('CASCADE')
 
-  @column()
-  declare userId: number
+      table
+        .integer('user_id')
+        .unsigned()
+        .notNullable()
+        .references('id')
+        .inTable('users')
+        .onDelete('CASCADE')
 
-  @column()
-  declare trackId: number
+      table.timestamp('created_at').nullable()
+      table.timestamp('updated_at').nullable()
+    })
+  }
 
-  @column.dateTime({ autoCreate: true })
-  declare createdAt: DateTime | null
-
-  @column.dateTime({ autoCreate: true, autoUpdate: true })
-  declare updatedAt: DateTime | null
-
-  @belongsTo(() => User)
-  declare user: BelongsTo<typeof User>
-
-  @belongsTo(() => Track)
-  declare track: BelongsTo<typeof Track>
+  async down() {
+    this.schema.dropTable(this.tableName)
+  }
 }

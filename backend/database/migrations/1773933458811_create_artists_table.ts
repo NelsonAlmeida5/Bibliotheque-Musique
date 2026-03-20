@@ -1,32 +1,21 @@
-import { DateTime } from 'luxon'
-import { BaseModel, column, hasMany } from '@adonisjs/lucid/orm'
-import type { HasMany } from '@adonisjs/lucid/types/relations'
+import { BaseSchema } from '@adonisjs/lucid/schema'
 
-import Track from '#models/track'
-import FavoriteArtist from '#models/favorite_artist'
+export default class extends BaseSchema {
+  protected tableName = 'artists'
 
-export default class Artist extends BaseModel {
-  @column({ isPrimary: true })
-  declare id: number
+  async up() {
+    this.schema.createTable(this.tableName, (table) => {
+      table.increments('id').notNullable()
+      table.string('name', 150).notNullable()
+      table.string('image_url', 255).nullable()
+      table.string('description', 255).nullable()
 
-  @column()
-  declare name: string
+      table.timestamp('created_at').nullable()
+      table.timestamp('updated_at').nullable()
+    })
+  }
 
-  @column()
-  declare imageUrl: string | null
-
-  @column()
-  declare description: string | null
-
-  @column.dateTime({ autoCreate: true })
-  declare createdAt: DateTime | null
-
-  @column.dateTime({ autoCreate: true, autoUpdate: true })
-  declare updatedAt: DateTime | null
-
-  @hasMany(() => Track)
-  declare tracks: HasMany<typeof Track>
-
-  @hasMany(() => FavoriteArtist)
-  declare favoriteArtists: HasMany<typeof FavoriteArtist>
+  async down() {
+    this.schema.dropTable(this.tableName)
+  }
 }

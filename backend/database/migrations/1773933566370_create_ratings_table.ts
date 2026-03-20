@@ -1,32 +1,33 @@
-import { DateTime } from 'luxon'
-import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
-import type { BelongsTo } from '@adonisjs/lucid/types/relations'
+import { BaseSchema } from '@adonisjs/lucid/schema'
 
-import User from '#models/user'
-import Track from '#models/track'
+export default class extends BaseSchema {
+  protected tableName = 'ratings'
 
-export default class Rating extends BaseModel {
-  @column({ isPrimary: true })
-  declare id: number
+  async up() {
+    this.schema.createTable(this.tableName, (table) => {
+      table
+        .integer('user_id')
+        .unsigned()
+        .notNullable()
+        .references('id')
+        .inTable('users')
+        .onDelete('CASCADE')
 
-  @column()
-  declare userId: number
+      table
+        .integer('track_id')
+        .unsigned()
+        .notNullable()
+        .references('id')
+        .inTable('tracks')
+        .onDelete('CASCADE')
 
-  @column()
-  declare trackId: number
+      table.integer('rating').notNullable()
 
-  @column()
-  declare rating: number
+      table.primary(['user_id', 'track_id'])
+    })
+  }
 
-  @column.dateTime({ autoCreate: true })
-  declare createdAt: DateTime | null
-
-  @column.dateTime({ autoCreate: true, autoUpdate: true })
-  declare updatedAt: DateTime | null
-
-  @belongsTo(() => User)
-  declare user: BelongsTo<typeof User>
-
-  @belongsTo(() => Track)
-  declare track: BelongsTo<typeof Track>
+  async down() {
+    this.schema.dropTable(this.tableName)
+  }
 }
