@@ -16,6 +16,9 @@ const RatingsController = () => import('#controllers/ratings_controller')
 | Public routes
 |--------------------------------------------------------------------------
 */
+router.get('/', async () => {
+  return { message: 'API Bibliotheque Musique is running' }
+})
 
 router.post('/register', [AuthController, 'register'])
 router.post('/login', [AuthController, 'login'])
