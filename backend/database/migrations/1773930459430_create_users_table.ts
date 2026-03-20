@@ -1,22 +1,62 @@
-import { BaseSchema } from '@adonisjs/lucid/schema'
+import { DateTime } from 'luxon'
+import hash from '@adonisjs/core/services/hash'
+import { compose } from '@adonisjs/core/helpers'
+import { BaseModel, column, hasMany } from '@adonisjs/lucid/orm'
+import { withAuthFinder } from '@adonisjs/auth/mixins/lucid'
+import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
+import type { HasMany } from '@adonisjs/lucid/types/relations'
 
-export default class extends BaseSchema {
-  protected tableName = 'users'
+import Track from '#models/track'
+import Playlist from '#models/playlist'
+import FavoriteTrack from '#models/favorite_track'
+import FavoriteArtist from '#models/favorite_artist'
+import Comment from '#models/comment'
+import Rating from '#models/rating'
 
-  async up() {
-    this.schema.createTable(this.tableName, (table) => {
-      table.increments('id').notNullable()
-      table.string('username', 50).notNullable().unique()
-      table.string('email', 150).notNullable().unique()
-      table.string('password', 255).notNullable()
-      table.string('role', 10).notNullable().defaultTo('user')
+const AuthFinder = withAuthFinder(() => hash.use('argon'), {
+  uids: ['email'],
+  passwordColumnName: 'password',
+})
 
-      table.timestamp('created_at').nullable()
-      table.timestamp('updated_at').nullable()
-    })
-  }
+export default class User extends compose(BaseModel, AuthFinder) {
+  @column({ isPrimary: true })
+  declare id: number
 
-  async down() {
-    this.schema.dropTable(this.tableName)
-  }
+  @column()
+  declare username: string
+
+  @column()
+  declare email: string
+
+  @column({ serializeAs: null })
+  declare password: string
+
+  @column()
+  declare role: string
+
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+
+  @hasMany(() => Track)
+  declare tracks: HasMany<typeof Track>
+
+  @hasMany(() => Playlist)
+  declare playlists: HasMany<typeof Playlist>
+
+  @hasMany(() => FavoriteTrack)
+  declare favoriteTracks: HasMany<typeof FavoriteTrack>
+
+  @hasMany(() => FavoriteArtist)
+  declare favoriteArtists: HasMany<typeof FavoriteArtist>
+
+  @hasMany(() => Comment)
+  declare comments: HasMany<typeof Comment>
+
+  @hasMany(() => Rating)
+  declare ratings: HasMany<typeof Rating>
+
+  static accessTokens = DbAccessTokensProvider.forModel(User)
 }

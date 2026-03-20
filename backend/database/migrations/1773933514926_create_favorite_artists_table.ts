@@ -1,35 +1,26 @@
-import { BaseSchema } from '@adonisjs/lucid/schema'
+import { DateTime } from 'luxon'
+import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
+import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 
-export default class extends BaseSchema {
-  protected tableName = 'favorite_artists'
+import User from '#models/user'
+import Artist from '#models/artist'
 
-  async up() {
-    this.schema.createTable(this.tableName, (table) => {
-      table.increments('id').notNullable()
+export default class FavoriteArtist extends BaseModel {
+  @column({ isPrimary: true })
+  declare id: number
 
-      table
-        .integer('artist_id')
-        .unsigned()
-        .notNullable()
-        .references('id')
-        .inTable('artists')
-        .onDelete('CASCADE')
+  @column()
+  declare userId: number
 
-      table
-        .integer('user_id')
-        .unsigned()
-        .notNullable()
-        .references('id')
-        .inTable('users')
-        .onDelete('CASCADE')
+  @column()
+  declare artistId: number
 
-      table.timestamp('created_at').nullable()
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
 
-      table.unique(['artist_id', 'user_id'])
-    })
-  }
+  @belongsTo(() => User)
+  declare user: BelongsTo<typeof User>
 
-  async down() {
-    this.schema.dropTable(this.tableName)
-  }
+  @belongsTo(() => Artist)
+  declare artist: BelongsTo<typeof Artist>
 }

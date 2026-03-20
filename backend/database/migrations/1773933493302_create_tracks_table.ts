@@ -1,46 +1,66 @@
-import { BaseSchema } from '@adonisjs/lucid/schema'
+import { DateTime } from 'luxon'
+import { BaseModel, column, belongsTo, hasMany, manyToMany } from '@adonisjs/lucid/orm'
+import type { BelongsTo, HasMany, ManyToMany } from '@adonisjs/lucid/types/relations'
 
-export default class extends BaseSchema {
-  protected tableName = 'tracks'
+import User from '#models/user'
+import Artist from '#models/artist'
+import Category from '#models/category'
+import FavoriteTrack from '#models/favorite_track'
+import Playlist from '#models/playlist'
+import Comment from '#models/comment'
+import Rating from '#models/rating'
 
-  async up() {
-    this.schema.createTable(this.tableName, (table) => {
-      table.increments('id').notNullable()
-      table.string('title', 150).notNullable()
-      table.string('embed_url', 255).notNullable()
-      table.string('cover_url', 255).nullable()
-      table.text('description').nullable()
+export default class Track extends BaseModel {
+  @column({ isPrimary: true })
+  declare id: number
 
-      table
-        .integer('category_id')
-        .unsigned()
-        .notNullable()
-        .references('id')
-        .inTable('categories')
-        .onDelete('CASCADE')
+  @column()
+  declare title: string
 
-      table
-        .integer('artist_id')
-        .unsigned()
-        .notNullable()
-        .references('id')
-        .inTable('artists')
-        .onDelete('CASCADE')
+  @column()
+  declare embedUrl: string
 
-      table
-        .integer('user_id')
-        .unsigned()
-        .notNullable()
-        .references('id')
-        .inTable('users')
-        .onDelete('CASCADE')
+  @column()
+  declare coverUrl: string | null
 
-      table.timestamp('created_at').nullable()
-      table.timestamp('updated_at').nullable()
-    })
-  }
+  @column()
+  declare description: string | null
 
-  async down() {
-    this.schema.dropTable(this.tableName)
-  }
+  @column()
+  declare categoryId: number
+
+  @column()
+  declare artistId: number
+
+  @column()
+  declare userId: number
+
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+
+  @belongsTo(() => Category)
+  declare category: BelongsTo<typeof Category>
+
+  @belongsTo(() => Artist)
+  declare artist: BelongsTo<typeof Artist>
+
+  @belongsTo(() => User)
+  declare user: BelongsTo<typeof User>
+
+  @hasMany(() => FavoriteTrack)
+  declare favoriteTracks: HasMany<typeof FavoriteTrack>
+
+  @hasMany(() => Comment)
+  declare comments: HasMany<typeof Comment>
+
+  @hasMany(() => Rating)
+  declare ratings: HasMany<typeof Rating>
+
+  @manyToMany(() => Playlist, {
+    pivotTable: 'playlist_tracks',
+  })
+  declare playlists: ManyToMany<typeof Playlist>
 }
