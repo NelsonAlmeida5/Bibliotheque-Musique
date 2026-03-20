@@ -1,38 +1,74 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import Comment from '#models/comment'
+import Track from '#models/track'
 
 export default class CommentsController {
-  /**
-   * Display a list of resource
-   */
-  async index({}: HttpContext) {}
+  async index({ params }: HttpContext) {
+    const trackId = params.id
 
-  /**
-   * Display form to create a new record
-   */
-  async create({}: HttpContext) {}
+    await Track.findOrFail(trackId)
 
-  /**
-   * Handle form submission for the create action
-   */
-  async store({ request }: HttpContext) {}
+    const comments = await Comment.query()
+      .where('track_id', trackId)
+      .preload('user')
+      .orderBy('created_at', 'desc')
 
-  /**
-   * Show individual record
-   */
-  async show({ params }: HttpContext) {}
+    return comments
+  }
 
-  /**
-   * Edit individual record
-   */
-  async edit({ params }: HttpContext) {}
+  async store({ params, request, auth, response }: HttpContext) {
+    const user = auth.getUserOrFail()
+    const trackId = params.id
 
-  /**
-   * Handle form submission for the edit action
-   */
-  async update({ params, request }: HttpContext) {}
+    await Track.findOrFail(trackId)
 
-  /**
-   * Delete record
-   */
-  async destroy({ params }: HttpContext) {}
+    const data = request.only(['content'])
+
+    const comment = await Comment.create({
+      content: data.content,
+      userId: user.id,
+      trackId: trackId,
+    })
+
+    await comment.load('user')
+    await comment.load('track')
+
+    return response.created(comment)
+  }
+
+  async update({ params, request, auth, response }: HttpContext) {
+    const user = auth.getUserOrFail()
+    const comment = await Comment.findOrFail(params.id)
+
+    if (comment.userId !== user.id && user.role !== 'admin') {
+      return response.forbidden({ message: 'You are not allowed to update this comment' })
+    }
+
+    const data = request.only(['content'])
+
+    if (data.content !== undefined) {
+      comment.content = data.content
+    }
+
+    await comment.save()
+    await comment.load('user')
+    await comment.load('track')
+
+    return comment
+  }
+
+  async destroy({ params, auth, response }: HttpContext) {
+    const user = auth.getUserOrFail()
+    const comment = await Comment.findOrFail(params.id)
+
+    if (comment.userId !== user.id && user.role !== 'admin') {
+      return response.forbidden({ message: 'You are not allowed to delete this comment' })
+    }
+
+    await comment.delete()
+
+    return {
+      message: 'Comment deleted successfully',
+    }
+  }
 }
