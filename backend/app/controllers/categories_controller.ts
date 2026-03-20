@@ -11,9 +11,7 @@ export default class CategoriesController {
 
     if (search) {
       query.where((builder) => {
-        builder
-          .whereILike('name', `%${search}%`)
-          .orWhereILike('description', `%${search}%`)
+        builder.whereILike('name', `%${search}%`).orWhereILike('description', `%${search}%`)
       })
     }
 
@@ -24,10 +22,7 @@ export default class CategoriesController {
     const category = await Category.query()
       .where('id', params.id)
       .preload('tracks', (tracksQuery) => {
-        tracksQuery
-          .preload('artist')
-          .preload('user')
-          .orderBy('created_at', 'desc')
+        tracksQuery.preload('artist').preload('user').orderBy('created_at', 'desc')
       })
       .firstOrFail()
 

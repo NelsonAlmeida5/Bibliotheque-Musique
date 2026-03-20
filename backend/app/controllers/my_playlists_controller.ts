@@ -1,38 +1,129 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import Playlist from '#models/playlist'
+import Track from '#models/track'
 
 export default class MyPlaylistsController {
-  /**
-   * Display a list of resource
-   */
-  async index({}: HttpContext) {}
+  async index({ auth }: HttpContext) {
+    const user = auth.getUserOrFail()
 
-  /**
-   * Display form to create a new record
-   */
-  async create({}: HttpContext) {}
+    const playlists = await Playlist.query()
+      .where('user_id', user.id)
+      .preload('tracks', (tracksQuery) => {
+        tracksQuery.preload('artist').preload('category')
+      })
+      .orderBy('created_at', 'desc')
 
-  /**
-   * Handle form submission for the create action
-   */
-  async store({ request }: HttpContext) {}
+    return playlists
+  }
 
-  /**
-   * Show individual record
-   */
-  async show({ params }: HttpContext) {}
+  async show({ params, auth, response }: HttpContext) {
+    const user = auth.getUserOrFail()
 
-  /**
-   * Edit individual record
-   */
-  async edit({ params }: HttpContext) {}
+    const playlist = await Playlist.query()
+      .where('id', params.id)
+      .where('user_id', user.id)
+      .preload('tracks', (tracksQuery) => {
+        tracksQuery.preload('artist').preload('category').preload('user')
+      })
+      .first()
 
-  /**
-   * Handle form submission for the edit action
-   */
-  async update({ params, request }: HttpContext) {}
+    if (!playlist) {
+      return response.notFound({ message: 'Playlist not found' })
+    }
 
-  /**
-   * Delete record
-   */
-  async destroy({ params }: HttpContext) {}
+    return playlist
+  }
+
+  async store({ request, auth, response }: HttpContext) {
+    const user = auth.getUserOrFail()
+    const data = request.only(['name', 'description'])
+
+    const playlist = await Playlist.create({
+      name: data.name,
+      description: data.description,
+      userId: user.id,
+    })
+
+    return response.created(playlist)
+  }
+
+  async update({ params, request, auth, response }: HttpContext) {
+    const user = auth.getUserOrFail()
+
+    const playlist = await Playlist.query().where('id', params.id).where('user_id', user.id).first()
+
+    if (!playlist) {
+      return response.notFound({ message: 'Playlist not found' })
+    }
+
+    const data = request.only(['name', 'description'])
+
+    if (data.name !== undefined) playlist.name = data.name
+    if (data.description !== undefined) playlist.description = data.description
+
+    await playlist.save()
+
+    return playlist
+  }
+
+  async destroy({ params, auth, response }: HttpContext) {
+    const user = auth.getUserOrFail()
+
+    const playlist = await Playlist.query().where('id', params.id).where('user_id', user.id).first()
+
+    if (!playlist) {
+      return response.notFound({ message: 'Playlist not found' })
+    }
+
+    await playlist.delete()
+
+    return {
+      message: 'Playlist deleted successfully',
+    }
+  }
+
+  async addTrack({ params, request, auth, response }: HttpContext) {
+    const user = auth.getUserOrFail()
+    const { track_id: trackId } = request.only(['track_id'])
+
+    const playlist = await Playlist.query().where('id', params.id).where('user_id', user.id).first()
+
+    if (!playlist) {
+      return response.notFound({ message: 'Playlist not found' })
+    }
+
+    await Track.findOrFail(trackId)
+
+    const alreadyAttached = await playlist
+      .related('tracks')
+      .query()
+      .where('tracks.id', trackId)
+      .first()
+
+    if (alreadyAttached) {
+      return response.conflict({ message: 'Track already in playlist' })
+    }
+
+    await playlist.related('tracks').attach([trackId])
+
+    return {
+      message: 'Track added to playlist successfully',
+    }
+  }
+
+  async removeTrack({ params, auth, response }: HttpContext) {
+    const user = auth.getUserOrFail()
+
+    const playlist = await Playlist.query().where('id', params.id).where('user_id', user.id).first()
+
+    if (!playlist) {
+      return response.notFound({ message: 'Playlist not found' })
+    }
+
+    await playlist.related('tracks').detach([params.trackId])
+
+    return {
+      message: 'Track removed from playlist successfully',
+    }
+  }
 }

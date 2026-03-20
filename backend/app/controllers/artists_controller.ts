@@ -11,9 +11,7 @@ export default class ArtistsController {
 
     if (search) {
       query.where((builder) => {
-        builder
-          .whereILike('name', `%${search}%`)
-          .orWhereILike('description', `%${search}%`)
+        builder.whereILike('name', `%${search}%`).orWhereILike('description', `%${search}%`)
       })
     }
 
@@ -24,10 +22,7 @@ export default class ArtistsController {
     const artist = await Artist.query()
       .where('id', params.id)
       .preload('tracks', (tracksQuery) => {
-        tracksQuery
-          .preload('category')
-          .preload('user')
-          .orderBy('created_at', 'desc')
+        tracksQuery.preload('category').preload('user').orderBy('created_at', 'desc')
       })
       .firstOrFail()
 
