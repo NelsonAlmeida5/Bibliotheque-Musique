@@ -1,4 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import { createCategoryValidator, updateCategoryValidator } from '#validators/category'
 import Category from '#models/category'
 
 export default class CategoriesController {
@@ -36,7 +37,7 @@ export default class CategoriesController {
       return response.forbidden({ message: 'Only admins can create categories' })
     }
 
-    const data = request.only(['name', 'description'])
+    const data = await request.validateUsing(createCategoryValidator)
 
     const category = await Category.create({
       name: data.name,
@@ -55,7 +56,7 @@ export default class CategoriesController {
 
     const category = await Category.findOrFail(params.id)
 
-    const data = request.only(['name', 'description'])
+    const data = await request.validateUsing(updateCategoryValidator)
 
     if (data.name !== undefined) category.name = data.name
     if (data.description !== undefined) category.description = data.description

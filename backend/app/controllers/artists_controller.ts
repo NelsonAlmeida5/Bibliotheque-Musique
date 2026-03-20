@@ -1,4 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import { createArtistValidator, updateArtistValidator } from '#validators/artist'
 import Artist from '#models/artist'
 
 export default class ArtistsController {
@@ -36,7 +37,7 @@ export default class ArtistsController {
       return response.forbidden({ message: 'Only admins can create artists' })
     }
 
-    const data = request.only(['name', 'image_url', 'description'])
+    const data = await request.validateUsing(createArtistValidator)
 
     const artist = await Artist.create({
       name: data.name,
@@ -56,7 +57,7 @@ export default class ArtistsController {
 
     const artist = await Artist.findOrFail(params.id)
 
-    const data = request.only(['name', 'image_url', 'description'])
+    const data = await request.validateUsing(updateArtistValidator)
 
     if (data.name !== undefined) artist.name = data.name
     if (data.image_url !== undefined) artist.imageUrl = data.image_url

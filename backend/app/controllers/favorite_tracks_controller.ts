@@ -1,4 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import { favoriteTrackValidator } from '#validators/favorite'
 import FavoriteTrack from '#models/favorite_track'
 import Track from '#models/track'
 
@@ -18,7 +19,7 @@ export default class FavoriteTracksController {
 
   async store({ request, auth, response }: HttpContext) {
     const user = auth.getUserOrFail()
-    const { track_id: trackId } = request.only(['track_id'])
+    const { track_id: trackId } = await request.validateUsing(favoriteTrackValidator)
 
     await Track.findOrFail(trackId)
 

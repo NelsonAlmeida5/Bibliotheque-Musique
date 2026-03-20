@@ -1,4 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import { favoriteArtistValidator } from '#validators/favorite'
 import FavoriteArtist from '#models/favorite_artist'
 import Artist from '#models/artist'
 
@@ -16,7 +17,7 @@ export default class FavoriteArtistsController {
 
   async store({ request, auth, response }: HttpContext) {
     const user = auth.getUserOrFail()
-    const { artist_id: artistId } = request.only(['artist_id'])
+    const { artist_id: artistId } = await request.validateUsing(favoriteArtistValidator)
 
     await Artist.findOrFail(artistId)
 

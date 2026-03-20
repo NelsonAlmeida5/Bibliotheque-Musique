@@ -1,4 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import { createTrackValidator, updateTrackValidator } from '#validators/track'
 import Track from '#models/track'
 import Artist from '#models/artist'
 import Category from '#models/category'
@@ -57,14 +58,7 @@ export default class TracksController {
   async store({ request, auth, response }: HttpContext) {
     const user = auth.user!
 
-    const data = request.only([
-      'title',
-      'embed_url',
-      'cover_url',
-      'description',
-      'artist_id',
-      'category_id',
-    ])
+    const data = await request.validateUsing(createTrackValidator)
 
     await Artist.findOrFail(data.artist_id)
     await Category.findOrFail(data.category_id)
@@ -95,14 +89,7 @@ export default class TracksController {
       return response.forbidden({ message: 'You are not allowed to update this track' })
     }
 
-    const data = request.only([
-      'title',
-      'embed_url',
-      'cover_url',
-      'description',
-      'artist_id',
-      'category_id',
-    ])
+    const data = await request.validateUsing(updateTrackValidator)
 
     if (data.artist_id) {
       await Artist.findOrFail(data.artist_id)

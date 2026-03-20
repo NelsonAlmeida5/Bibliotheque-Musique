@@ -1,9 +1,10 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import { loginValidator, registerValidator } from '#validators/auth'
 import User from '#models/user'
 
 export default class AuthController {
   async register({ request, response, auth }: HttpContext) {
-    const data = request.only(['username', 'email', 'password'])
+    const data = await request.validateUsing(registerValidator)
 
     const existingUserByEmail = await User.findBy('email', data.email)
     if (existingUserByEmail) {
@@ -31,7 +32,7 @@ export default class AuthController {
   }
 
   async login({ request, auth }: HttpContext) {
-    const { email, password } = request.only(['email', 'password'])
+    const { email, password } = await request.validateUsing(loginValidator)
 
     const user = await User.verifyCredentials(email, password)
     const token = await auth.use('api').createToken(user)

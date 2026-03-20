@@ -1,4 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import { createCommentValidator, updateCommentValidator } from '#validators/comment'
 import Comment from '#models/comment'
 import Track from '#models/track'
 
@@ -22,7 +23,7 @@ export default class CommentsController {
 
     await Track.findOrFail(trackId)
 
-    const data = request.only(['content'])
+    const data = await request.validateUsing(createCommentValidator)
 
     const comment = await Comment.create({
       content: data.content,
@@ -44,7 +45,7 @@ export default class CommentsController {
       return response.forbidden({ message: 'You are not allowed to update this comment' })
     }
 
-    const data = request.only(['content'])
+    const data = await request.validateUsing(updateCommentValidator)
 
     if (data.content !== undefined) {
       comment.content = data.content

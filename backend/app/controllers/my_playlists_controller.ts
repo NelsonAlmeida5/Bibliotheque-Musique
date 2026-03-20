@@ -1,4 +1,9 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import {
+  createPlaylistValidator,
+  updatePlaylistValidator,
+  addTrackToPlaylistValidator,
+} from '#validators/playlist'
 import Playlist from '#models/playlist'
 import Track from '#models/track'
 
@@ -36,7 +41,7 @@ export default class MyPlaylistsController {
 
   async store({ request, auth, response }: HttpContext) {
     const user = auth.getUserOrFail()
-    const data = request.only(['name', 'description'])
+    const data = await request.validateUsing(createPlaylistValidator)
 
     const playlist = await Playlist.create({
       name: data.name,
@@ -56,7 +61,7 @@ export default class MyPlaylistsController {
       return response.notFound({ message: 'Playlist not found' })
     }
 
-    const data = request.only(['name', 'description'])
+    const data = await request.validateUsing(updatePlaylistValidator)
 
     if (data.name !== undefined) playlist.name = data.name
     if (data.description !== undefined) playlist.description = data.description
@@ -84,7 +89,7 @@ export default class MyPlaylistsController {
 
   async addTrack({ params, request, auth, response }: HttpContext) {
     const user = auth.getUserOrFail()
-    const { track_id: trackId } = request.only(['track_id'])
+    const { track_id: trackId } = await request.validateUsing(addTrackToPlaylistValidator)
 
     const playlist = await Playlist.query().where('id', params.id).where('user_id', user.id).first()
 

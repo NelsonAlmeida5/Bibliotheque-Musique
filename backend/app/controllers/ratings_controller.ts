@@ -1,4 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import { rateTrackValidator } from '#validators/rating'
 import Rating from '#models/rating'
 import Track from '#models/track'
 
@@ -25,17 +26,13 @@ export default class RatingsController {
     }
   }
 
-  async store({ params, request, auth, response }: HttpContext) {
+  async store({ params, request, auth }: HttpContext) {
     const user = auth.getUserOrFail()
     const trackId = params.id
 
     await Track.findOrFail(trackId)
 
-    const data = request.only(['rating'])
-
-    if (!data.rating || data.rating < 1 || data.rating > 5) {
-      return response.badRequest({ message: 'Rating must be between 1 and 5' })
-    }
+    const data = await request.validateUsing(rateTrackValidator)
 
     let rating = await Rating.query().where('user_id', user.id).where('track_id', trackId).first()
 
