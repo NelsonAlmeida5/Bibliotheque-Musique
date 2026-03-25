@@ -91,13 +91,6 @@ const highlights = [
             </div>
           </div>
         </div>
-
-        <div class="home-hero__visual" aria-hidden="true">
-          <div class="hero-orb hero-orb--one"></div>
-          <div class="hero-orb hero-orb--two"></div>
-          <div class="hero-orb hero-orb--three"></div>
-          <div class="hero-mic"></div>
-        </div>
       </div>
     </section>
 
