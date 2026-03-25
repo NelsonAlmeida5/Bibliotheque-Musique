@@ -1,5 +1,6 @@
 <script setup>
 import AppNavbar from './components/layout/AppNavbar.vue'
+import AppFooter from './components/layout/AppFooter.vue'
 </script>
 
 <template>
@@ -9,5 +10,7 @@ import AppNavbar from './components/layout/AppNavbar.vue'
     <main class="main-content">
       <RouterView />
     </main>
+
+    <AppFooter />
   </div>
 </template>
