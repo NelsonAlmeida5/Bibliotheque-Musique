@@ -18,12 +18,15 @@ export const useAuthStore = defineStore('auth', {
       this.user = JSON.parse(localStorage.getItem('user') || 'null')
     },
 
-    setAuthData(token, user) {
+    setAuthData(token, user = null) {
       this.token = token
       this.user = user
 
       localStorage.setItem('token', token)
-      localStorage.setItem('user', JSON.stringify(user))
+
+      if (user) {
+        localStorage.setItem('user', JSON.stringify(user))
+      }
     },
 
     clearAuth() {
@@ -32,6 +35,25 @@ export const useAuthStore = defineStore('auth', {
 
       localStorage.removeItem('token')
       localStorage.removeItem('user')
+    },
+
+    async login(email, password) {
+      const response = await api.post('/login', { email, password })
+
+      const token =
+        response.data?.token?.token ||
+        response.data?.token?.value ||
+        response.data?.token ||
+        response.data?.accessToken ||
+        response.data?.access_token
+
+      if (!token) {
+        throw new Error('Token not found in login response')
+      }
+
+      this.setAuthData(token)
+
+      await this.fetchMe()
     },
 
     async fetchMe() {
