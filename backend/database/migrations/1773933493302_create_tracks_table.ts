@@ -10,6 +10,7 @@ export default class extends BaseSchema {
       table.string('embed_url', 255).notNullable()
       table.string('cover_url', 255).nullable()
       table.text('description').nullable()
+      table.boolean('is_public').notNullable().defaultTo(true)
 
       table
         .integer('category_id')

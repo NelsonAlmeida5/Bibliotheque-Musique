@@ -23,7 +23,11 @@ export default class ArtistsController {
     const artist = await Artist.query()
       .where('id', params.id)
       .preload('tracks', (tracksQuery) => {
-        tracksQuery.preload('category').preload('user').orderBy('created_at', 'desc')
+        tracksQuery
+          .where('is_public', true)
+          .preload('category')
+          .preload('user')
+          .orderBy('created_at', 'desc')
       })
       .firstOrFail()
 

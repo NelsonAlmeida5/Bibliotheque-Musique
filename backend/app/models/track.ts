@@ -35,6 +35,9 @@ export default class Track extends BaseModel {
   @column()
   declare userId: number
 
+  @column()
+  declare isPublic: boolean
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime | null
 

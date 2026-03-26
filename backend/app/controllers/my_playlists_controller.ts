@@ -14,7 +14,12 @@ export default class MyPlaylistsController {
     const playlists = await Playlist.query()
       .where('user_id', user.id)
       .preload('tracks', (tracksQuery) => {
-        tracksQuery.preload('artist').preload('category')
+        tracksQuery
+          .where((query) => {
+            query.where('is_public', true).orWhere('user_id', user.id)
+          })
+          .preload('artist')
+          .preload('category')
       })
       .orderBy('created_at', 'desc')
 
@@ -28,7 +33,13 @@ export default class MyPlaylistsController {
       .where('id', params.id)
       .where('user_id', user.id)
       .preload('tracks', (tracksQuery) => {
-        tracksQuery.preload('artist').preload('category').preload('user')
+        tracksQuery
+          .where((query) => {
+            query.where('is_public', true).orWhere('user_id', user.id)
+          })
+          .preload('artist')
+          .preload('category')
+          .preload('user')
       })
       .first()
 
@@ -97,7 +108,16 @@ export default class MyPlaylistsController {
       return response.notFound({ message: 'Playlist not found' })
     }
 
-    await Track.findOrFail(trackId)
+    const track = await Track.query()
+      .where('id', trackId)
+      .where((query) => {
+        query.where('is_public', true).orWhere('user_id', user.id)
+      })
+      .first()
+
+    if (!track) {
+      return response.notFound({ message: 'Track not found or not accessible' })
+    }
 
     const alreadyAttached = await playlist
       .related('tracks')

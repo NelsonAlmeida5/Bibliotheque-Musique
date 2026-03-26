@@ -7,7 +7,7 @@ export default class CommentsController {
   async index({ params }: HttpContext) {
     const trackId = params.id
 
-    await Track.findOrFail(trackId)
+    await Track.query().where('id', trackId).where('is_public', true).firstOrFail()
 
     const comments = await Comment.query()
       .where('track_id', trackId)
@@ -21,7 +21,7 @@ export default class CommentsController {
     const user = auth.getUserOrFail()
     const trackId = params.id
 
-    await Track.findOrFail(trackId)
+    await Track.query().where('id', trackId).where('is_public', true).firstOrFail()
 
     const data = await request.validateUsing(createCommentValidator)
 

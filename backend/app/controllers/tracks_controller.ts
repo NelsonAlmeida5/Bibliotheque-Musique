@@ -14,6 +14,7 @@ export default class TracksController {
     const limit = request.input('limit', 10)
 
     const query = Track.query()
+      .where('is_public', true)
       .preload('artist')
       .preload('category')
       .preload('user')
@@ -43,6 +44,7 @@ export default class TracksController {
   async show({ params }: HttpContext) {
     const track = await Track.query()
       .where('id', params.id)
+      .where('is_public', true)
       .preload('artist')
       .preload('category')
       .preload('user')
@@ -71,6 +73,7 @@ export default class TracksController {
       artistId: data.artist_id,
       categoryId: data.category_id,
       userId: user.id,
+      isPublic: false,
     })
 
     await track.load('artist')
@@ -134,6 +137,7 @@ export default class TracksController {
 
     const tracks = await Track.query()
       .where('user_id', user.id)
+      .where('is_public', false)
       .preload('artist')
       .preload('category')
       .orderBy('created_at', 'desc')

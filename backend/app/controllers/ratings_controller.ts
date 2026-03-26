@@ -8,7 +8,7 @@ export default class RatingsController {
     const user = auth.getUserOrFail()
     const trackId = params.id
 
-    await Track.findOrFail(trackId)
+    await Track.query().where('id', trackId).where('is_public', true).firstOrFail()
 
     const rating = await Rating.query().where('user_id', user.id).where('track_id', trackId).first()
 
@@ -30,7 +30,7 @@ export default class RatingsController {
     const user = auth.getUserOrFail()
     const trackId = params.id
 
-    await Track.findOrFail(trackId)
+    await Track.query().where('id', trackId).where('is_public', true).firstOrFail()
 
     const data = await request.validateUsing(rateTrackValidator)
 
