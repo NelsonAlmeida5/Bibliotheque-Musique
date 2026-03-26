@@ -19,9 +19,12 @@ async function handleLogin() {
     await authStore.login(email.value, password.value)
     router.push('/')
   } catch (error) {
-    errorMessage.value =
-      error?.response?.data?.message ||
-      'Login failed. Please check your email and password.'
+    console.error(error)
+
+errorMessage.value =
+  error?.response?.data?.message ||
+  error?.message ||
+  'Login failed. Please check your email and password.'
   } finally {
     isLoading.value = false
   }

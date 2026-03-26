@@ -40,20 +40,35 @@ export const useAuthStore = defineStore('auth', {
     async login(email, password) {
       const response = await api.post('/login', { email, password })
 
-      const token =
-        response.data?.token?.token ||
-        response.data?.token?.value ||
-        response.data?.token ||
-        response.data?.accessToken ||
-        response.data?.access_token
+      console.log('LOGIN RESPONSE:', response.data)
 
-      if (!token) {
+      const tokenCandidate =
+        response.data?.token?.token ??
+        response.data?.token?.value ??
+        response.data?.accessToken?.token ??
+        response.data?.accessToken?.value ??
+        response.data?.access_token?.token ??
+        response.data?.access_token?.value ??
+        (typeof response.data?.token === 'string' ? response.data.token : null) ??
+        (typeof response.data?.accessToken === 'string' ? response.data.accessToken : null) ??
+        (typeof response.data?.access_token === 'string' ? response.data.access_token : null)
+
+      if (!tokenCandidate || typeof tokenCandidate !== 'string') {
         throw new Error('Token not found in login response')
       }
 
-      this.setAuthData(token)
+      const user = response.data?.user ?? null
 
-      await this.fetchMe()
+      this.setAuthData(tokenCandidate, user)
+
+      if (!user) {
+        await this.fetchMe()
+      }
+    },
+
+    async register(payload) {
+      const response = await api.post('/register', payload)
+      return response.data
     },
 
     async fetchMe() {
