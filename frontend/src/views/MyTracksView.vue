@@ -27,6 +27,8 @@ const tracks = ref([
       "A private draft track meant for one of my late-night playlists.",
     artistId: 1,
     categoryId: 1,
+    customArtistName: null,
+    customCategoryName: null,
     isPublic: false,
   },
   {
@@ -36,8 +38,10 @@ const tracks = ref([
     coverUrl: "https://picsum.photos/seed/track2/500/500",
     description:
       "Industrial textures and darker ambient layers for personal use.",
-    artistId: 4,
-    categoryId: 5,
+    artistId: null,
+    categoryId: null,
+    customArtistName: "Nyght Ritual",
+    customCategoryName: "Night Industrial",
     isPublic: false,
   },
 ]);
@@ -48,12 +52,23 @@ const form = ref({
   embedUrl: "",
   coverUrl: "",
   description: "",
-  artistId: "",
-  categoryId: "",
+  artistInput: "",
+  categoryInput: "",
+  selectedArtistId: null,
+  selectedCategoryId: null,
 });
+
+const showArtistSuggestions = ref(false);
+const showCategorySuggestions = ref(false);
 
 const isEditing = computed(() => form.value.id !== null);
 const privateTrackCount = computed(() => tracks.value.length);
+
+function normalize(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase();
+}
 
 function getArtistName(artistId) {
   return (
@@ -69,6 +84,88 @@ function getCategoryName(categoryId) {
   );
 }
 
+function getTrackArtistLabel(track) {
+  if (track.customArtistName) return track.customArtistName;
+  if (track.artistId) return getArtistName(track.artistId);
+  return "Unspecified artist";
+}
+
+function getTrackCategoryLabel(track) {
+  if (track.customCategoryName) return track.customCategoryName;
+  if (track.categoryId) return getCategoryName(track.categoryId);
+  return "Unspecified category";
+}
+
+const filteredArtistOptions = computed(() => {
+  const search = normalize(form.value.artistInput);
+  if (!search) return artistOptions;
+
+  return artistOptions.filter((artist) =>
+    normalize(artist.name).includes(search),
+  );
+});
+
+const filteredCategoryOptions = computed(() => {
+  const search = normalize(form.value.categoryInput);
+  if (!search) return categoryOptions;
+
+  return categoryOptions.filter((category) =>
+    normalize(category.name).includes(search),
+  );
+});
+
+function findExactArtistMatch(input) {
+  return (
+    artistOptions.find(
+      (artist) => normalize(artist.name) === normalize(input),
+    ) || null
+  );
+}
+
+function findExactCategoryMatch(input) {
+  return (
+    categoryOptions.find(
+      (category) => normalize(category.name) === normalize(input),
+    ) || null
+  );
+}
+
+function handleArtistInput() {
+  const exactMatch = findExactArtistMatch(form.value.artistInput);
+
+  if (exactMatch) {
+    form.value.selectedArtistId = exactMatch.id;
+  } else {
+    form.value.selectedArtistId = null;
+  }
+
+  showArtistSuggestions.value = true;
+}
+
+function handleCategoryInput() {
+  const exactMatch = findExactCategoryMatch(form.value.categoryInput);
+
+  if (exactMatch) {
+    form.value.selectedCategoryId = exactMatch.id;
+  } else {
+    form.value.selectedCategoryId = null;
+  }
+
+  showCategorySuggestions.value = true;
+}
+
+function selectArtist(artist) {
+  form.value.artistInput = artist.name;
+  form.value.selectedArtistId = artist.id;
+  showArtistSuggestions.value = false;
+}
+
+function selectCategory(category) {
+  form.value.categoryInput = category.name;
+  form.value.selectedCategoryId = category.id;
+  showCategorySuggestions.value = false;
+}
+
 function resetForm() {
   form.value = {
     id: null,
@@ -76,9 +173,14 @@ function resetForm() {
     embedUrl: "",
     coverUrl: "",
     description: "",
-    artistId: "",
-    categoryId: "",
+    artistInput: "",
+    categoryInput: "",
+    selectedArtistId: null,
+    selectedCategoryId: null,
   };
+
+  showArtistSuggestions.value = false;
+  showCategorySuggestions.value = false;
 }
 
 function loadTrackIntoForm(track) {
@@ -88,9 +190,15 @@ function loadTrackIntoForm(track) {
     embedUrl: track.embedUrl,
     coverUrl: track.coverUrl,
     description: track.description,
-    artistId: track.artistId,
-    categoryId: track.categoryId,
+    artistInput: track.customArtistName || getArtistName(track.artistId),
+    categoryInput:
+      track.customCategoryName || getCategoryName(track.categoryId),
+    selectedArtistId: track.artistId ?? null,
+    selectedCategoryId: track.categoryId ?? null,
   };
+
+  showArtistSuggestions.value = false;
+  showCategorySuggestions.value = false;
 
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -107,16 +215,77 @@ function deleteTrack(trackId, title) {
   }
 }
 
+function buildArtistPayload() {
+  const exactMatch = findExactArtistMatch(form.value.artistInput);
+
+  if (exactMatch) {
+    return {
+      artistId: exactMatch.id,
+      customArtistName: null,
+    };
+  }
+
+  if (form.value.selectedArtistId) {
+    return {
+      artistId: form.value.selectedArtistId,
+      customArtistName: null,
+    };
+  }
+
+  return {
+    artistId: null,
+    customArtistName: form.value.artistInput.trim(),
+  };
+}
+
+function buildCategoryPayload() {
+  const exactMatch = findExactCategoryMatch(form.value.categoryInput);
+
+  if (exactMatch) {
+    return {
+      categoryId: exactMatch.id,
+      customCategoryName: null,
+    };
+  }
+
+  if (form.value.selectedCategoryId) {
+    return {
+      categoryId: form.value.selectedCategoryId,
+      customCategoryName: null,
+    };
+  }
+
+  return {
+    categoryId: null,
+    customCategoryName: form.value.categoryInput.trim(),
+  };
+}
+
 function handleSubmit() {
   if (
-    !form.value.title ||
-    !form.value.embedUrl ||
-    !form.value.artistId ||
-    !form.value.categoryId
+    !form.value.title.trim() ||
+    !form.value.embedUrl.trim() ||
+    !form.value.artistInput.trim() ||
+    !form.value.categoryInput.trim()
   ) {
     window.alert("Please fill in the required fields.");
     return;
   }
+
+  const artistPayload = buildArtistPayload();
+  const categoryPayload = buildCategoryPayload();
+
+  const payload = {
+    title: form.value.title.trim(),
+    embedUrl: form.value.embedUrl.trim(),
+    coverUrl: form.value.coverUrl.trim(),
+    description: form.value.description.trim(),
+    artistId: artistPayload.artistId,
+    categoryId: categoryPayload.categoryId,
+    customArtistName: artistPayload.customArtistName,
+    customCategoryName: categoryPayload.customCategoryName,
+    isPublic: false,
+  };
 
   if (isEditing.value) {
     const index = tracks.value.findIndex((track) => track.id === form.value.id);
@@ -124,12 +293,7 @@ function handleSubmit() {
     if (index !== -1) {
       tracks.value[index] = {
         ...tracks.value[index],
-        title: form.value.title,
-        embedUrl: form.value.embedUrl,
-        coverUrl: form.value.coverUrl,
-        description: form.value.description,
-        artistId: Number(form.value.artistId),
-        categoryId: Number(form.value.categoryId),
+        ...payload,
       };
     }
 
@@ -137,13 +301,7 @@ function handleSubmit() {
   } else {
     tracks.value.unshift({
       id: Date.now(),
-      title: form.value.title,
-      embedUrl: form.value.embedUrl,
-      coverUrl: form.value.coverUrl,
-      description: form.value.description,
-      artistId: Number(form.value.artistId),
-      categoryId: Number(form.value.categoryId),
-      isPublic: false,
+      ...payload,
     });
 
     window.alert("Private track created. Backend connection comes next.");
@@ -179,8 +337,8 @@ function handleSubmit() {
             <div>
               <h2>Track editor</h2>
               <p>
-                Create or edit a private track. Private tracks do not appear in
-                the public catalog.
+                Create or edit a private track. Existing references are
+                suggested while you type.
               </p>
             </div>
           </div>
@@ -227,34 +385,79 @@ function handleSubmit() {
             </div>
 
             <div class="track-form__grid">
-              <div class="track-form__field">
+              <div class="track-form__field track-autocomplete">
                 <label for="track-artist">Artist</label>
-                <select id="track-artist" v-model="form.artistId">
-                  <option value="" disabled>Select an artist</option>
-                  <option
-                    v-for="artist in artistOptions"
+                <input
+                  id="track-artist"
+                  v-model="form.artistInput"
+                  type="text"
+                  placeholder="Start typing an artist..."
+                  autocomplete="off"
+                  @input="handleArtistInput"
+                  @focus="showArtistSuggestions = true"
+                  @blur="setTimeout(() => (showArtistSuggestions = false), 150)"
+                />
+
+                <div
+                  v-if="
+                    showArtistSuggestions &&
+                    form.artistInput.trim() &&
+                    filteredArtistOptions.length
+                  "
+                  class="track-autocomplete__menu"
+                >
+                  <button
+                    v-for="artist in filteredArtistOptions"
                     :key="artist.id"
-                    :value="artist.id"
+                    type="button"
+                    class="track-autocomplete__item"
+                    @mousedown.prevent="selectArtist(artist)"
                   >
                     {{ artist.name }}
-                  </option>
-                </select>
+                  </button>
+                </div>
               </div>
 
-              <div class="track-form__field">
+              <div class="track-form__field track-autocomplete">
                 <label for="track-category">Category</label>
-                <select id="track-category" v-model="form.categoryId">
-                  <option value="" disabled>Select a category</option>
-                  <option
-                    v-for="category in categoryOptions"
+                <input
+                  id="track-category"
+                  v-model="form.categoryInput"
+                  type="text"
+                  placeholder="Start typing a category..."
+                  autocomplete="off"
+                  @input="handleCategoryInput"
+                  @focus="showCategorySuggestions = true"
+                  @blur="
+                    setTimeout(() => (showCategorySuggestions = false), 150)
+                  "
+                />
+
+                <div
+                  v-if="
+                    showCategorySuggestions &&
+                    form.categoryInput.trim() &&
+                    filteredCategoryOptions.length
+                  "
+                  class="track-autocomplete__menu"
+                >
+                  <button
+                    v-for="category in filteredCategoryOptions"
                     :key="category.id"
-                    :value="category.id"
+                    type="button"
+                    class="track-autocomplete__item"
+                    @mousedown.prevent="selectCategory(category)"
                   >
                     {{ category.name }}
-                  </option>
-                </select>
+                  </button>
+                </div>
               </div>
             </div>
+
+            <p class="track-form__hint">
+              If a matching artist or category already exists, you can select
+              it. Otherwise, your typed value will be saved as custom.
+            </p>
 
             <div class="track-form__footer">
               <span class="my-track-status-badge">Private</span>
@@ -299,15 +502,17 @@ function handleSubmit() {
                     ? `background-image: url('${track.coverUrl}')`
                     : ''
                 "
-              ></div>
+              >
+                <span class="my-track-card__badge">Private</span>
+              </div>
 
               <div class="my-track-card__body">
                 <div class="my-track-card__top">
                   <div>
                     <h3>{{ track.title }}</h3>
                     <p>
-                      {{ getArtistName(track.artistId) }} ·
-                      {{ getCategoryName(track.categoryId) }}
+                      {{ getTrackArtistLabel(track) }} ·
+                      {{ getTrackCategoryLabel(track) }}
                     </p>
                   </div>
                 </div>
