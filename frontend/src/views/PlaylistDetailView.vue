@@ -13,7 +13,6 @@ const mockPlaylists = {
     name: "Late Night Descent",
     description:
       "Dark ambient and drone — for the hours when the city finally goes quiet and the mind starts to wander somewhere deeper.",
-    visibility: "Public",
     updatedAgo: "2d ago",
     tracks: [
       {
@@ -41,7 +40,6 @@ const mockPlaylists = {
     name: "Reverb & Dust",
     description:
       "Shoegaze, dream pop and noise rock — guitars drowning in effects pedals, vocals buried like whispers under static.",
-    visibility: "Public",
     updatedAgo: "5d ago",
     tracks: [
       {
@@ -63,7 +61,6 @@ const mockPlaylists = {
     name: "Brazilian Underground",
     description:
       "Luckhaos, trap absurde et autres curiosités brésiliennes — une catégorie à part entière, assumée et sans excuses.",
-    visibility: "Private",
     updatedAgo: "1w ago",
     tracks: [
       {
@@ -79,7 +76,6 @@ const mockPlaylists = {
     name: "Liturgy & Ruin",
     description:
       "Neoclassical, sacred and post-classical music — compositions that feel like the inside of an empty cathedral at 3am.",
-    visibility: "Public",
     updatedAgo: "2w ago",
     tracks: [
       {
@@ -101,7 +97,6 @@ const mockPlaylists = {
     name: "Work & Focus",
     description:
       "Ambient and minimal electronic — no lyrics, no drama. Just texture and rhythm for long sessions of deep work.",
-    visibility: "Private",
     updatedAgo: "3w ago",
     tracks: [
       {
@@ -124,7 +119,6 @@ const fallbackPlaylist = {
   id: playlistId,
   name: "Playlist not found",
   description: "This playlist could not be loaded.",
-  visibility: "Private",
   updatedAgo: "-",
   tracks: [],
 };
@@ -133,7 +127,6 @@ const initialPlaylist = mockPlaylists[playlistId] || fallbackPlaylist;
 
 const playlistName = ref(initialPlaylist.name);
 const playlistDescription = ref(initialPlaylist.description);
-const playlistVisibility = ref(initialPlaylist.visibility);
 const tracks = ref([...initialPlaylist.tracks]);
 
 const trackCount = computed(() => tracks.value.length);
@@ -182,14 +175,12 @@ function deletePlaylist() {
           </p>
 
           <p class="playlist-detail-subtitle">
-            Update the playlist information, manage its tracks, and control its
-            visibility.
+            Update the playlist information and manage its tracks.
           </p>
 
           <div class="playlist-detail-stats">
             <span>{{ trackCount }} tracks</span>
             <span>Updated {{ initialPlaylist.updatedAgo }}</span>
-            <span>{{ playlistVisibility }}</span>
           </div>
         </div>
 
@@ -227,14 +218,6 @@ function deletePlaylist() {
                 rows="5"
                 placeholder="Describe this playlist"
               ></textarea>
-            </div>
-
-            <div class="playlist-form__field">
-              <label for="playlist-visibility">Visibility</label>
-              <select id="playlist-visibility" v-model="playlistVisibility">
-                <option value="Public">Public</option>
-                <option value="Private">Private</option>
-              </select>
             </div>
           </div>
         </section>
