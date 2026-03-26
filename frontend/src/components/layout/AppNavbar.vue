@@ -13,7 +13,12 @@ onMounted(() => {
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const isAdmin = computed(() => authStore.isAdmin)
-const username = computed(() => authStore.user?.username || 'Account')
+const username = computed(() => authStore.user?.username || 'User')
+
+const userInitial = computed(() => {
+  const name = authStore.user?.username || 'U'
+  return name.charAt(0).toUpperCase()
+})
 
 const isHomeActive = computed(() => route.name === 'home')
 const isCatalogActive = computed(() =>
@@ -76,7 +81,9 @@ async function handleLogout() {
           <RouterLink to="/favorites" class="navbar__auth-link">Favorites</RouterLink>
           <RouterLink v-if="isAdmin" to="/admin" class="navbar__auth-link">Admin</RouterLink>
 
-          <span class="navbar__user">{{ username }}</span>
+          <div class="navbar__avatar" :title="username">
+            {{ userInitial }}
+          </div>
 
           <button class="button button--ghost button--sm" @click="handleLogout">
             Log out
