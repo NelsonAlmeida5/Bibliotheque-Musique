@@ -27,16 +27,22 @@ export default class Track extends BaseModel {
   declare description: string | null
 
   @column()
-  declare categoryId: number
+  declare categoryId: number | null
 
   @column()
-  declare artistId: number
+  declare artistId: number | null
 
   @column()
   declare userId: number
 
   @column()
   declare isPublic: boolean
+
+  @column()
+  declare customArtistName: string | null
+
+  @column()
+  declare customCategoryName: string | null
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime | null

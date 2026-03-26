@@ -6,8 +6,12 @@ export const createTrackValidator = vine.compile(
     embed_url: vine.string().maxLength(255),
     cover_url: vine.string().maxLength(255).optional(),
     description: vine.string().maxLength(1000).optional(),
-    artist_id: vine.number().withoutDecimals().positive(),
-    category_id: vine.number().withoutDecimals().positive(),
+
+    artist_id: vine.number().withoutDecimals().positive().optional(),
+    category_id: vine.number().withoutDecimals().positive().optional(),
+
+    custom_artist_name: vine.string().minLength(2).maxLength(150).optional(),
+    custom_category_name: vine.string().minLength(2).maxLength(150).optional(),
   })
 )
 
@@ -17,7 +21,11 @@ export const updateTrackValidator = vine.compile(
     embed_url: vine.string().maxLength(255).optional(),
     cover_url: vine.string().maxLength(255).optional(),
     description: vine.string().maxLength(1000).optional(),
+
     artist_id: vine.number().withoutDecimals().positive().optional(),
     category_id: vine.number().withoutDecimals().positive().optional(),
+
+    custom_artist_name: vine.string().minLength(2).maxLength(150).optional(),
+    custom_category_name: vine.string().minLength(2).maxLength(150).optional(),
   })
 )
