@@ -2180,6 +2180,217 @@ img {
   margin: 0 0 16px;
 }
 
+/* Track Detail */
+
+.track-detail-page {
+  padding: 56px 0 150px;
+}
+
+.track-detail-back-link {
+  display: inline-block;
+  color: var(--warm-gray);
+  margin-bottom: 24px;
+}
+
+.track-detail-back-link:hover {
+  color: var(--ink);
+}
+
+.track-detail-hero {
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr);
+  gap: 30px;
+  align-items: stretch;
+  margin-bottom: 34px;
+}
+
+.track-detail-hero__cover {
+  min-height: 380px;
+  border-radius: 22px;
+  background-size: cover;
+  background-position: center;
+  border: 1px solid var(--border);
+}
+
+.track-detail-hero__content {
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  border-radius: 22px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.track-detail-eyebrow {
+  margin: 0 0 10px;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--theme);
+}
+
+.track-detail-hero__content h1 {
+  margin: 0;
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: clamp(2.8rem, 5vw, 4.4rem);
+  line-height: 0.95;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+}
+
+.track-detail-artist-line {
+  margin: 16px 0 0;
+  color: var(--warm-gray);
+  font-size: 1rem;
+}
+
+.track-detail-artist-line a {
+  color: var(--ink);
+}
+
+.track-detail-description {
+  margin: 22px 0 0;
+  color: var(--warm-gray);
+  line-height: 1.8;
+  max-width: 760px;
+}
+
+.track-detail-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 22px;
+  color: var(--light-gray);
+  font-size: 0.92rem;
+}
+
+.track-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+.track-detail-layout {
+  display: grid;
+  grid-template-columns: 1.4fr 0.8fr;
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+.track-detail-panel {
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  border-radius: 22px;
+  padding: 24px;
+}
+
+.track-detail-panel__header {
+  margin-bottom: 18px;
+}
+
+.track-detail-panel__header h2 {
+  margin: 0;
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 2rem;
+  font-weight: 500;
+}
+
+.track-detail-panel__text {
+  margin: 0;
+  color: var(--warm-gray);
+  line-height: 1.7;
+}
+
+.track-embed-wrapper {
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #0f1014;
+}
+
+.track-embed-wrapper iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.track-rating-picker {
+  display: flex;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.track-rating-picker__star {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--light-gray);
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+.track-rating-picker__star.is-active {
+  color: #f5c76b;
+  background: rgba(245, 199, 107, 0.08);
+  border-color: rgba(245, 199, 107, 0.25);
+}
+
+.track-rating-picker__value {
+  margin: 14px 0 0;
+  color: var(--light-gray);
+  font-size: 0.92rem;
+}
+
+.track-comments-panel {
+  margin-top: 0;
+}
+
+.track-comment-list {
+  display: grid;
+  gap: 16px;
+}
+
+.track-comment-card {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px 18px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.track-comment-card__top {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+.track-comment-card__top strong {
+  color: var(--ink);
+}
+
+.track-comment-card__top span {
+  color: var(--light-gray);
+  font-size: 0.88rem;
+}
+
+.track-comment-card p {
+  margin: 0;
+  color: var(--warm-gray);
+  line-height: 1.7;
+}
+
+.track-detail-empty-state {
+  color: var(--warm-gray);
+}
+
 @media (max-width: 640px) {
   .container {
     width: min(var(--container), calc(100% - 28px));
@@ -2349,5 +2560,29 @@ img {
   .favorite-track-grid,
   .favorite-artist-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1000px) {
+  .track-detail-hero,
+  .track-detail-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .track-detail-hero__cover {
+    min-height: 320px;
+  }
+}
+
+@media (max-width: 700px) {
+  .track-detail-actions,
+  .track-detail-stats {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .track-comment-card__top {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
