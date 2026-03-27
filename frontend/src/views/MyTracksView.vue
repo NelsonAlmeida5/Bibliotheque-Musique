@@ -502,9 +502,7 @@ function handleSubmit() {
                     ? `background-image: url('${track.coverUrl}')`
                     : ''
                 "
-              >
-                <span class="my-track-card__badge">Private</span>
-              </div>
+              ></div>
 
               <div class="my-track-card__body">
                 <div class="my-track-card__top">
