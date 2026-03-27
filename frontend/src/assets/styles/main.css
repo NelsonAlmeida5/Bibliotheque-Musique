@@ -1746,8 +1746,9 @@ img {
 
 .my-track-card {
   display: grid;
-  grid-template-columns: 140px minmax(0, 1fr);
+  grid-template-columns: 124px minmax(0, 1fr);
   gap: 18px;
+  align-items: start;
   border: 1px solid var(--border);
   border-radius: 0px;
   overflow: hidden;
@@ -1756,7 +1757,9 @@ img {
 
 .my-track-card__cover {
   position: relative;
-  min-height: 150px;
+  aspect-ratio: 1 / 1;
+  min-height: 0;
+  align-self: start;
   background:
     linear-gradient(
       135deg,
@@ -1767,6 +1770,16 @@ img {
   background-size: cover;
   background-position: center;
   border-right: 1px solid var(--border);
+}
+
+.my-track-card__cover--placeholder {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(139, 124, 246, 0.2),
+      rgba(255, 255, 255, 0.03)
+    ),
+    linear-gradient(180deg, #2a2d36, #1b1d24);
 }
 
 .my-track-card__badge {
@@ -1783,7 +1796,19 @@ img {
 }
 
 .my-track-card__body {
+  min-width: 0;
   padding: 16px 16px 14px 0;
+}
+
+.my-track-card__top {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.my-track-card__top-main {
+  min-width: 0;
 }
 
 .my-track-card__top h3 {
@@ -2788,6 +2813,69 @@ img {
   color: var(--warm-gray);
 }
 
+.my-track-player-panel {
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.02);
+  padding: 18px;
+}
+
+.my-track-player-panel__top {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.my-track-player-panel__top h4 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 500;
+}
+
+.my-track-player-panel__top p {
+  margin: 8px 0 0;
+  color: var(--light-gray);
+  font-size: 0.9rem;
+}
+
+.my-track-player-toolbar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.my-track-player-host {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  min-height: 260px;
+  border: 1px solid var(--border);
+  background: #0f1014;
+  overflow: hidden;
+}
+
+.my-track-player-host iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.my-track-player-error {
+  margin: 0;
+  color: #e0b4bd;
+  line-height: 1.6;
+}
+
+@media (max-width: 700px) {
+  .my-track-player-panel__top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
 @media (max-width: 640px) {
   .container {
     width: min(var(--container), calc(100% - 28px));
@@ -3158,12 +3246,17 @@ img {
   }
 
   .my-track-card__cover {
+    aspect-ratio: 16 / 9;
     min-height: 180px;
     border-right: none;
     border-bottom: 1px solid var(--border);
   }
 
   .my-track-card__body {
+    padding: 16px;
+  }
+
+  .my-track-player-panel {
     padding: 16px;
   }
 }
