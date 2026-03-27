@@ -2206,7 +2206,7 @@ img {
 
 .track-detail-hero__cover {
   min-height: 380px;
-  border-radius: 22px;
+  border-radius: px;
   background-size: cover;
   background-position: center;
   border: 1px solid var(--border);
@@ -2215,7 +2215,7 @@ img {
 .track-detail-hero__content {
   border: 1px solid var(--border);
   background: var(--surface-1);
-  border-radius: 22px;
+  border-radius: 0px;
   padding: 28px;
   display: flex;
   flex-direction: column;
@@ -2282,7 +2282,7 @@ img {
 .track-detail-panel {
   border: 1px solid var(--border);
   background: var(--surface-1);
-  border-radius: 22px;
+  border-radius: 0px;
   padding: 24px;
 }
 
@@ -2292,7 +2292,6 @@ img {
 
 .track-detail-panel__header h2 {
   margin: 0;
-  font-family: "Playfair Display", Georgia, serif;
   font-size: 2rem;
   font-weight: 500;
 }
@@ -2307,7 +2306,7 @@ img {
   position: relative;
   width: 100%;
   padding-top: 56.25%;
-  border-radius: 18px;
+  border-radius: px;
   overflow: hidden;
   border: 1px solid var(--border);
   background: #0f1014;
@@ -2329,7 +2328,7 @@ img {
 .track-rating-picker__star {
   width: 46px;
   height: 46px;
-  border-radius: 12px;
+  border-radius: 0px;
   border: 1px solid var(--border);
   background: transparent;
   color: var(--light-gray);
@@ -2360,7 +2359,7 @@ img {
 
 .track-comment-card {
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: px;
   padding: 16px 18px;
   background: rgba(255, 255, 255, 0.02);
 }
