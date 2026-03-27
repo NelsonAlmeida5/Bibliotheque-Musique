@@ -3261,6 +3261,27 @@ img {
   }
 }
 
+.catalog-view-toggle__button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.catalog-card__play {
+  text-decoration: none;
+}
+
+.catalog-empty-state {
+  border: 1px dashed var(--border);
+  padding: 34px 24px;
+  text-align: center;
+  color: var(--warm-gray);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.catalog-empty-state p {
+  margin: 0 0 16px;
+}
+
 @media (max-width: 1100px) {
   .favorite-track-grid,
   .favorite-artist-grid {
