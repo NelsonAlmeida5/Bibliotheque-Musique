@@ -3180,6 +3180,122 @@ img {
   color: var(--warm-gray);
 }
 
+.track-detail-feedback {
+  margin-top: 18px;
+}
+
+.track-detail-playlist-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.track-detail-select {
+  min-width: 220px;
+  height: 46px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--ink);
+  padding: 0 14px;
+  outline: none;
+  font: inherit;
+}
+
+.track-detail-select:focus {
+  border-color: var(--theme);
+}
+
+.track-detail-select:disabled,
+.track-rating-picker__star:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.track-detail-login-hint {
+  margin: 18px 0 0;
+  color: var(--warm-gray);
+  line-height: 1.7;
+}
+
+.track-detail-login-hint a {
+  color: var(--ink);
+}
+
+.track-comment-form {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.track-comment-form__textarea {
+  width: 100%;
+  min-height: 130px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--ink);
+  padding: 14px;
+  outline: none;
+  resize: vertical;
+  font: inherit;
+}
+
+.track-comment-form__textarea:focus {
+  border-color: var(--theme);
+}
+
+.track-comment-form__textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.track-comment-form__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.track-comment-form__hint {
+  color: var(--light-gray);
+  font-size: 0.9rem;
+}
+
+.track-comment-card__top > div {
+  display: grid;
+  gap: 6px;
+}
+
+.track-comment-card__top button {
+  white-space: nowrap;
+}
+
+@media (max-width: 1000px) {
+  .track-detail-hero,
+  .track-detail-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .track-detail-playlist-inline,
+  .track-comment-form__footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .track-detail-select {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .track-comment-card__top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
 @media (max-width: 640px) {
   .artists-grid {
     grid-template-columns: 1fr;
