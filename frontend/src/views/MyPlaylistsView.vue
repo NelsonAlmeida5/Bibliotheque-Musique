@@ -1,77 +1,173 @@
 <script setup>
-import { ref, computed } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
+import api from "../services/api";
 
 const router = useRouter();
 
-const playlists = ref([
-  {
-    id: 1,
-    name: "Late Night Descent",
-    description:
-      "Dark ambient and drone — for the hours when the city finally goes quiet and the mind starts to wander somewhere deeper.",
-    tracksCount: 18,
-    updatedAgo: "2d ago",
-    variant: "sand",
-  },
-  {
-    id: 2,
-    name: "Reverb & Dust",
-    description:
-      "Shoegaze, dream pop and noise rock — guitars drowning in effects pedals, vocals buried like whispers under static.",
-    tracksCount: 22,
-    updatedAgo: "5d ago",
-    variant: "violet",
-  },
-  {
-    id: 3,
-    name: "Brazilian Underground",
-    description:
-      "Luckhaos, trap absurde et autres curiosités brésiliennes — une catégorie à part entière, assumée et sans excuses.",
-    tracksCount: 9,
-    updatedAgo: "1w ago",
-    variant: "sand",
-  },
-  {
-    id: 4,
-    name: "Liturgy & Ruin",
-    description:
-      "Neoclassical, sacred and post-classical music — compositions that feel like the inside of an empty cathedral at 3am.",
-    tracksCount: 15,
-    updatedAgo: "2w ago",
-    variant: "blue",
-  },
-  {
-    id: 5,
-    name: "Work & Focus",
-    description:
-      "Ambient and minimal electronic — no lyrics, no drama. Just texture and rhythm for long sessions of deep work.",
-    tracksCount: 11,
-    updatedAgo: "3w ago",
-    variant: "stone",
-  },
-]);
+const playlists = ref([]);
+
+const isLoading = ref(true);
+const isSubmittingCreate = ref(false);
+
+const errorMessage = ref("");
+const successMessage = ref("");
+
+const showCreateForm = ref(false);
+
+const createForm = ref({
+  name: "",
+  description: "",
+});
+
+function clearFeedback() {
+  errorMessage.value = "";
+  successMessage.value = "";
+}
+
+function extractCollection(payload) {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  return [];
+}
+
+function getApiErrorMessage(error, fallbackMessage) {
+  return (
+    error?.response?.data?.message ||
+    error?.response?.data?.errors?.[0]?.message ||
+    fallbackMessage
+  );
+}
+
+function normalizePlaylist(item) {
+  return {
+    id: item.id,
+    name: item.name ?? "Untitled playlist",
+    description: item.description ?? "",
+    updatedAt:
+      item.updatedAt ??
+      item.updated_at ??
+      item.createdAt ??
+      item.created_at ??
+      null,
+    tracks: Array.isArray(item.tracks) ? item.tracks : [],
+    tracksCount: Array.isArray(item.tracks) ? item.tracks.length : 0,
+  };
+}
+
+function getPlaylistVariant(index) {
+  const variants = ["sand", "violet", "blue", "stone"];
+  return variants[index % variants.length];
+}
+
+function formatUpdatedLabel(dateValue) {
+  if (!dateValue) return "Recently updated";
+
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return "Recently updated";
+
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
 
 const playlistCount = computed(() => playlists.value.length);
 const totalTracks = computed(() =>
   playlists.value.reduce((sum, playlist) => sum + playlist.tracksCount, 0),
 );
 
-function openPlaylist(id) {
-  router.push(`/my-playlists/${id}`);
+async function loadPlaylists() {
+  isLoading.value = true;
+  clearFeedback();
+
+  try {
+    const response = await api.get("/my-playlists");
+    playlists.value = extractCollection(response.data).map(normalizePlaylist);
+  } catch (error) {
+    errorMessage.value = getApiErrorMessage(
+      error,
+      "Unable to load your playlists right now.",
+    );
+  } finally {
+    isLoading.value = false;
+  }
 }
 
-function deletePlaylist(id, name) {
-  const confirmed = window.confirm(`Delete "${name}" permanently?`);
+function openPlaylist(id) {
+  router.push({ name: "playlist-detail", params: { id } });
+}
 
+function openCreateForm() {
+  clearFeedback();
+  showCreateForm.value = true;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function closeCreateForm() {
+  showCreateForm.value = false;
+  createForm.value = {
+    name: "",
+    description: "",
+  };
+}
+
+async function createPlaylist() {
+  clearFeedback();
+
+  if (!createForm.value.name.trim()) {
+    errorMessage.value = "Playlist name is required.";
+    return;
+  }
+
+  isSubmittingCreate.value = true;
+
+  try {
+    const response = await api.post("/my-playlists", {
+      name: createForm.value.name.trim(),
+      description: createForm.value.description.trim() || null,
+    });
+
+    successMessage.value = "Playlist created successfully.";
+    closeCreateForm();
+    await loadPlaylists();
+
+    const createdId = response.data?.id;
+    if (createdId) {
+      router.push({ name: "playlist-detail", params: { id: createdId } });
+    }
+  } catch (error) {
+    errorMessage.value = getApiErrorMessage(
+      error,
+      "Unable to create the playlist.",
+    );
+  } finally {
+    isSubmittingCreate.value = false;
+  }
+}
+
+async function deletePlaylist(id, name) {
+  clearFeedback();
+
+  const confirmed = window.confirm(`Delete "${name}" permanently?`);
   if (!confirmed) return;
 
-  playlists.value = playlists.value.filter((playlist) => playlist.id !== id);
+  try {
+    await api.delete(`/my-playlists/${id}`);
+    playlists.value = playlists.value.filter((playlist) => playlist.id !== id);
+    successMessage.value = "Playlist deleted successfully.";
+  } catch (error) {
+    errorMessage.value = getApiErrorMessage(
+      error,
+      "Unable to delete the playlist.",
+    );
+  }
 }
 
-function createPlaylist() {
-  window.alert("Playlist creation form will be added next.");
-}
+onMounted(() => {
+  loadPlaylists();
+});
 </script>
 
 <template>
@@ -87,11 +183,67 @@ function createPlaylist() {
 
     <section class="my-playlists-content">
       <div class="container">
-        <div class="my-playlists-grid">
+        <p v-if="errorMessage" class="auth-error">{{ errorMessage }}</p>
+        <p v-if="successMessage" class="auth-success">{{ successMessage }}</p>
+
+        <section v-if="showCreateForm" class="playlist-creator-panel">
+          <div class="playlist-creator-panel__header">
+            <div>
+              <h2>Create playlist</h2>
+              <p>Build a new private collection for your library.</p>
+            </div>
+          </div>
+
+          <form class="playlist-creator-form" @submit.prevent="createPlaylist">
+            <div class="playlist-form__field">
+              <label for="new-playlist-name">Name</label>
+              <input
+                id="new-playlist-name"
+                v-model="createForm.name"
+                type="text"
+                placeholder="Playlist name"
+              />
+            </div>
+
+            <div class="playlist-form__field">
+              <label for="new-playlist-description">Description</label>
+              <textarea
+                id="new-playlist-description"
+                v-model="createForm.description"
+                rows="5"
+                placeholder="Describe this playlist"
+              ></textarea>
+            </div>
+
+            <div class="playlist-creator-form__actions">
+              <button
+                type="button"
+                class="button button--ghost"
+                @click="closeCreateForm"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="submit"
+                class="button button--primary"
+                :disabled="isSubmittingCreate"
+              >
+                {{ isSubmittingCreate ? "Creating..." : "Create playlist" }}
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <div v-if="isLoading" class="playlist-page-empty-state">
+          <p>Loading your playlists...</p>
+        </div>
+
+        <div v-else class="my-playlists-grid">
           <button
             type="button"
             class="playlist-create-card"
-            @click="createPlaylist"
+            @click="openCreateForm"
           >
             <div class="playlist-create-card__plus">+</div>
             <strong>New playlist</strong>
@@ -99,14 +251,14 @@ function createPlaylist() {
           </button>
 
           <article
-            v-for="playlist in playlists"
+            v-for="(playlist, index) in playlists"
             :key="playlist.id"
             class="playlist-card"
             @click="openPlaylist(playlist.id)"
           >
             <div
               class="playlist-card__cover"
-              :class="`playlist-card__cover--${playlist.variant}`"
+              :class="`playlist-card__cover--${getPlaylistVariant(index)}`"
             >
               <div class="playlist-card__actions">
                 <button
@@ -139,12 +291,14 @@ function createPlaylist() {
             <div class="playlist-card__body">
               <h3>{{ playlist.name }}</h3>
               <p class="playlist-card__description">
-                {{ playlist.description }}
+                {{ playlist.description || "No description provided yet." }}
               </p>
 
               <div class="playlist-card__meta">
                 <span>{{ playlist.tracksCount }} tracks</span>
-                <span>Updated {{ playlist.updatedAgo }}</span>
+                <span
+                  >Updated {{ formatUpdatedLabel(playlist.updatedAt) }}</span
+                >
               </div>
             </div>
           </article>

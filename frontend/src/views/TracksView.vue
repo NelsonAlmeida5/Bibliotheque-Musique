@@ -6,6 +6,7 @@ const sortOptions = ["Most recent", "Artist A–Z", "Title A–Z"];
 
 const tracks = ref([]);
 const categoryNames = ref([]);
+const favoriteTrackIds = ref([]);
 
 const searchQuery = ref("");
 const artistQuery = ref("");
@@ -14,6 +15,9 @@ const selectedSort = ref("Most recent");
 
 const isLoading = ref(true);
 const errorMessage = ref("");
+const successMessage = ref("");
+
+const isAuthenticated = computed(() => !!localStorage.getItem("token"));
 
 function extractCollection(payload) {
   if (Array.isArray(payload)) return payload;
@@ -25,6 +29,19 @@ function normalize(value) {
   return String(value || "")
     .trim()
     .toLowerCase();
+}
+
+function clearFeedback() {
+  errorMessage.value = "";
+  successMessage.value = "";
+}
+
+function getApiErrorMessage(error, fallbackMessage) {
+  return (
+    error?.response?.data?.message ||
+    error?.response?.data?.errors?.[0]?.message ||
+    fallbackMessage
+  );
 }
 
 function normalizeTrack(track) {
@@ -42,6 +59,10 @@ function normalizeTrack(track) {
     customCategoryName:
       track.customCategoryName ?? track.custom_category_name ?? null,
   };
+}
+
+function normalizeFavoriteTrack(item) {
+  return item.track?.id ?? item.trackId ?? item.track_id ?? null;
 }
 
 function getTrackArtistLabel(track) {
@@ -91,6 +112,10 @@ function removeSelectedCategory(categoryName) {
   selectedCategories.value = selectedCategories.value.filter(
     (name) => name !== categoryName,
   );
+}
+
+function isTrackFavorite(trackId) {
+  return favoriteTrackIds.value.includes(Number(trackId));
 }
 
 const categories = computed(() => {
@@ -153,34 +178,85 @@ const filteredTracks = computed(() => {
   return result;
 });
 
+async function loadTracks() {
+  const tracksResponse = await api.get("/tracks", {
+    params: { page: 1, limit: 100 },
+  });
+  tracks.value = extractCollection(tracksResponse.data).map(normalizeTrack);
+
+  const categoriesResponse = await api.get("/categories", {
+    params: { page: 1, limit: 100 },
+  });
+
+  const officialCategoryNames = extractCollection(categoriesResponse.data).map(
+    (category) => category.name,
+  );
+
+  const trackCategoryNames = tracks.value.map((track) =>
+    getTrackCategoryLabel(track),
+  );
+
+  categoryNames.value = [
+    ...new Set([...officialCategoryNames, ...trackCategoryNames]),
+  ].sort((a, b) => a.localeCompare(b));
+}
+
+async function loadFavoriteTracks() {
+  if (!isAuthenticated.value) {
+    favoriteTrackIds.value = [];
+    return;
+  }
+
+  const response = await api.get("/favorite-tracks");
+  favoriteTrackIds.value = extractCollection(response.data)
+    .map(normalizeFavoriteTrack)
+    .filter(Boolean)
+    .map((id) => Number(id));
+}
+
 async function loadCatalogData() {
   isLoading.value = true;
-  errorMessage.value = "";
+  clearFeedback();
 
   try {
-    const [tracksResponse, categoriesResponse] = await Promise.all([
-      api.get("/tracks", { params: { page: 1, limit: 100 } }),
-      api.get("/categories", { params: { page: 1, limit: 100 } }),
-    ]);
-
-    tracks.value = extractCollection(tracksResponse.data).map(normalizeTrack);
-
-    const officialCategoryNames = extractCollection(
-      categoriesResponse.data,
-    ).map((category) => category.name);
-
-    const trackCategoryNames = tracks.value.map((track) =>
-      getTrackCategoryLabel(track),
-    );
-
-    categoryNames.value = [
-      ...new Set([...officialCategoryNames, ...trackCategoryNames]),
-    ].sort((a, b) => a.localeCompare(b));
+    await Promise.all([loadTracks(), loadFavoriteTracks()]);
   } catch (error) {
-    errorMessage.value =
-      error?.response?.data?.message || "Unable to load the catalog right now.";
+    errorMessage.value = getApiErrorMessage(
+      error,
+      "Unable to load the catalog right now.",
+    );
   } finally {
     isLoading.value = false;
+  }
+}
+
+async function toggleFavoriteTrack(track) {
+  clearFeedback();
+
+  if (!isAuthenticated.value) {
+    errorMessage.value = "You must be logged in to manage favorite tracks.";
+    return;
+  }
+
+  const trackId = Number(track.id);
+
+  try {
+    if (isTrackFavorite(trackId)) {
+      await api.delete(`/favorite-tracks/${trackId}`);
+      favoriteTrackIds.value = favoriteTrackIds.value.filter(
+        (id) => id !== trackId,
+      );
+      successMessage.value = "Track removed from favorites.";
+    } else {
+      await api.post("/favorite-tracks", { track_id: trackId });
+      favoriteTrackIds.value = [...favoriteTrackIds.value, trackId];
+      successMessage.value = "Track added to favorites.";
+    }
+  } catch (error) {
+    errorMessage.value = getApiErrorMessage(
+      error,
+      "Unable to update favorite track right now.",
+    );
   }
 }
 
@@ -282,6 +358,7 @@ onMounted(() => {
 
         <div class="catalog-main">
           <p v-if="errorMessage" class="auth-error">{{ errorMessage }}</p>
+          <p v-if="successMessage" class="auth-success">{{ successMessage }}</p>
 
           <div v-if="selectedCategories.length" class="catalog-active-filters">
             <button
@@ -317,6 +394,20 @@ onMounted(() => {
                 class="catalog-card__cover"
                 :style="getTrackCoverStyle(track)"
               >
+                <button
+                  type="button"
+                  class="favorite-card__heart catalog-card__favorite"
+                  :class="{ 'is-active': isTrackFavorite(track.id) }"
+                  :title="
+                    isTrackFavorite(track.id)
+                      ? 'Remove from favorites'
+                      : 'Add to favorites'
+                  "
+                  @click="toggleFavoriteTrack(track)"
+                >
+                  {{ isTrackFavorite(track.id) ? "♥" : "♡" }}
+                </button>
+
                 <RouterLink
                   :to="{ name: 'track-detail', params: { id: track.id } }"
                   class="catalog-card__play"

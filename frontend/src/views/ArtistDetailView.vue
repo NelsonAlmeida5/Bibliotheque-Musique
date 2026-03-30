@@ -9,12 +9,43 @@ const artist = ref(null);
 const isLoading = ref(true);
 const errorMessage = ref("");
 
+const actionError = ref("");
+const actionSuccess = ref("");
+const isSubmittingFavorite = ref(false);
+const isFavorite = ref(false);
+
+const currentUser = ref(readStoredUser());
+const isAuthenticated = computed(
+  () => !!localStorage.getItem("token") && !!currentUser.value,
+);
+
 const artistId = computed(() => Number(route.params.id));
+
+function readStoredUser() {
+  try {
+    return JSON.parse(localStorage.getItem("user") || "null");
+  } catch {
+    return null;
+  }
+}
+
+function clearFeedback() {
+  actionError.value = "";
+  actionSuccess.value = "";
+}
 
 function extractCollection(payload) {
   if (Array.isArray(payload)) return payload;
   if (Array.isArray(payload?.data)) return payload.data;
   return [];
+}
+
+function getApiErrorMessage(error, fallbackMessage) {
+  return (
+    error?.response?.data?.message ||
+    error?.response?.data?.errors?.[0]?.message ||
+    fallbackMessage
+  );
 }
 
 function normalizeArtist(item) {
@@ -38,6 +69,12 @@ function normalizeArtist(item) {
             : null,
         }))
       : [],
+  };
+}
+
+function normalizeFavoriteArtist(item) {
+  return {
+    id: item.artist?.id ?? item.artistId ?? item.artist_id ?? null,
   };
 }
 
@@ -113,29 +150,83 @@ const artistProfileText = computed(() => {
 });
 
 async function loadArtist() {
+  const response = await api.get(`/artists/${artistId.value}`);
+  artist.value = normalizeArtist(response.data);
+}
+
+async function loadFavoriteState() {
+  if (!isAuthenticated.value) {
+    isFavorite.value = false;
+    return;
+  }
+
+  const response = await api.get("/favorite-artists");
+  const favorites = extractCollection(response.data).map(
+    normalizeFavoriteArtist,
+  );
+
+  isFavorite.value = favorites.some(
+    (favorite) => Number(favorite.id) === artistId.value,
+  );
+}
+
+async function loadPage() {
   isLoading.value = true;
   errorMessage.value = "";
+  clearFeedback();
 
   try {
-    const response = await api.get(`/artists/${artistId.value}`);
-    artist.value = normalizeArtist(response.data);
+    currentUser.value = readStoredUser();
+    await loadArtist();
+    await loadFavoriteState();
   } catch (error) {
-    errorMessage.value =
-      error?.response?.data?.message || "Unable to load this artist right now.";
+    errorMessage.value = getApiErrorMessage(
+      error,
+      "Unable to load this artist right now.",
+    );
     artist.value = null;
   } finally {
     isLoading.value = false;
   }
 }
 
+async function toggleFavoriteArtist() {
+  if (!isAuthenticated.value) {
+    actionError.value = "You must be logged in to manage favorite artists.";
+    return;
+  }
+
+  clearFeedback();
+  isSubmittingFavorite.value = true;
+
+  try {
+    if (isFavorite.value) {
+      await api.delete(`/favorite-artists/${artistId.value}`);
+      isFavorite.value = false;
+      actionSuccess.value = "Artist removed from favorites.";
+    } else {
+      await api.post("/favorite-artists", { artist_id: artistId.value });
+      isFavorite.value = true;
+      actionSuccess.value = "Artist added to favorites.";
+    }
+  } catch (error) {
+    actionError.value = getApiErrorMessage(
+      error,
+      "Unable to update favorite artist right now.",
+    );
+  } finally {
+    isSubmittingFavorite.value = false;
+  }
+}
+
 onMounted(() => {
-  loadArtist();
+  loadPage();
 });
 
 watch(
   () => route.params.id,
   () => {
-    loadArtist();
+    loadPage();
   },
 );
 </script>
@@ -188,11 +279,39 @@ watch(
               <span>Latest release: {{ latestReleaseLabel }}</span>
             </div>
 
+            <p v-if="actionError" class="auth-error artist-detail-feedback">
+              {{ actionError }}
+            </p>
+            <p v-if="actionSuccess" class="auth-success artist-detail-feedback">
+              {{ actionSuccess }}
+            </p>
+
             <div class="artist-detail-actions">
               <RouterLink to="/tracks" class="button button--ghost">
                 Browse catalog
               </RouterLink>
+
+              <button
+                type="button"
+                class="button"
+                :class="isFavorite ? 'button--details' : 'button--ghost'"
+                :disabled="isSubmittingFavorite || !isAuthenticated"
+                @click="toggleFavoriteArtist"
+              >
+                {{
+                  isSubmittingFavorite
+                    ? "Saving..."
+                    : isFavorite
+                      ? "♥ Favorited"
+                      : "♡ Add to favorites"
+                }}
+              </button>
             </div>
+
+            <p v-if="!isAuthenticated" class="artist-detail-login-hint">
+              <RouterLink to="/login">Log in</RouterLink>
+              to save this artist to your favorites.
+            </p>
           </div>
         </section>
 

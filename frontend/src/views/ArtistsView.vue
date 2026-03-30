@@ -33,11 +33,16 @@ const alphabet = [
 ];
 
 const artists = ref([]);
+const favoriteArtistIds = ref([]);
+
 const searchQuery = ref("");
 const selectedLetter = ref("All");
 
 const isLoading = ref(true);
 const errorMessage = ref("");
+const successMessage = ref("");
+
+const isAuthenticated = computed(() => !!localStorage.getItem("token"));
 
 function extractCollection(payload) {
   if (Array.isArray(payload)) return payload;
@@ -51,6 +56,19 @@ function normalize(value) {
     .toLowerCase();
 }
 
+function clearFeedback() {
+  errorMessage.value = "";
+  successMessage.value = "";
+}
+
+function getApiErrorMessage(error, fallbackMessage) {
+  return (
+    error?.response?.data?.message ||
+    error?.response?.data?.errors?.[0]?.message ||
+    fallbackMessage
+  );
+}
+
 function normalizeArtist(item) {
   return {
     id: item.id,
@@ -58,6 +76,10 @@ function normalizeArtist(item) {
     description: item.description ?? "",
     imageUrl: item.imageUrl ?? item.image_url ?? "",
   };
+}
+
+function normalizeFavoriteArtist(item) {
+  return item.artist?.id ?? item.artistId ?? item.artist_id ?? null;
 }
 
 function getArtistInitials(name) {
@@ -74,7 +96,6 @@ function getArtistInitials(name) {
 
 function getArtistDescription(artist) {
   if (artist.description?.trim()) return artist.description;
-
   return "No description available for this artist yet.";
 }
 
@@ -91,6 +112,10 @@ function getArtistCoverStyle(artist) {
 function clearFilters() {
   searchQuery.value = "";
   selectedLetter.value = "All";
+}
+
+function isArtistFavorite(artistId) {
+  return favoriteArtistIds.value.includes(Number(artistId));
 }
 
 const filteredArtists = computed(() => {
@@ -119,25 +144,74 @@ const filteredArtists = computed(() => {
 });
 
 async function loadArtists() {
+  const response = await api.get("/artists", {
+    params: { page: 1, limit: 100 },
+  });
+
+  artists.value = extractCollection(response.data).map(normalizeArtist);
+}
+
+async function loadFavoriteArtists() {
+  if (!isAuthenticated.value) {
+    favoriteArtistIds.value = [];
+    return;
+  }
+
+  const response = await api.get("/favorite-artists");
+  favoriteArtistIds.value = extractCollection(response.data)
+    .map(normalizeFavoriteArtist)
+    .filter(Boolean)
+    .map((id) => Number(id));
+}
+
+async function loadPage() {
   isLoading.value = true;
-  errorMessage.value = "";
+  clearFeedback();
 
   try {
-    const response = await api.get("/artists", {
-      params: { page: 1, limit: 100 },
-    });
-
-    artists.value = extractCollection(response.data).map(normalizeArtist);
+    await Promise.all([loadArtists(), loadFavoriteArtists()]);
   } catch (error) {
-    errorMessage.value =
-      error?.response?.data?.message || "Unable to load artists right now.";
+    errorMessage.value = getApiErrorMessage(
+      error,
+      "Unable to load artists right now.",
+    );
   } finally {
     isLoading.value = false;
   }
 }
 
+async function toggleFavoriteArtist(artist) {
+  clearFeedback();
+
+  if (!isAuthenticated.value) {
+    errorMessage.value = "You must be logged in to manage favorite artists.";
+    return;
+  }
+
+  const artistId = Number(artist.id);
+
+  try {
+    if (isArtistFavorite(artistId)) {
+      await api.delete(`/favorite-artists/${artistId}`);
+      favoriteArtistIds.value = favoriteArtistIds.value.filter(
+        (id) => id !== artistId,
+      );
+      successMessage.value = "Artist removed from favorites.";
+    } else {
+      await api.post("/favorite-artists", { artist_id: artistId });
+      favoriteArtistIds.value = [...favoriteArtistIds.value, artistId];
+      successMessage.value = "Artist added to favorites.";
+    }
+  } catch (error) {
+    errorMessage.value = getApiErrorMessage(
+      error,
+      "Unable to update favorite artist right now.",
+    );
+  }
+}
+
 onMounted(() => {
-  loadArtists();
+  loadPage();
 });
 </script>
 
@@ -184,6 +258,7 @@ onMounted(() => {
         </div>
 
         <p v-if="errorMessage" class="auth-error">{{ errorMessage }}</p>
+        <p v-if="successMessage" class="auth-success">{{ successMessage }}</p>
 
         <div v-if="isLoading" class="artists-empty-state">
           <p>Loading artists...</p>
@@ -201,6 +276,20 @@ onMounted(() => {
                 :class="{ 'artist-card__cover--placeholder': !artist.imageUrl }"
                 :style="getArtistCoverStyle(artist)"
               >
+                <button
+                  type="button"
+                  class="favorite-card__heart artist-card__favorite"
+                  :class="{ 'is-active': isArtistFavorite(artist.id) }"
+                  :title="
+                    isArtistFavorite(artist.id)
+                      ? 'Remove from favorites'
+                      : 'Add to favorites'
+                  "
+                  @click="toggleFavoriteArtist(artist)"
+                >
+                  {{ isArtistFavorite(artist.id) ? "♥" : "♡" }}
+                </button>
+
                 <div class="artist-card__badge">
                   {{ getArtistInitials(artist.name) }}
                 </div>

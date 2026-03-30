@@ -1,32 +1,32 @@
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+import { useAuthStore } from "../stores/auth";
 
-const router = useRouter()
-const authStore = useAuthStore()
+const router = useRouter();
+const authStore = useAuthStore();
 
-const email = ref('')
-const password = ref('')
-const errorMessage = ref('')
-const isLoading = ref(false)
+const email = ref("");
+const password = ref("");
+const errorMessage = ref("");
+const isLoading = ref(false);
 
 async function handleLogin() {
-  errorMessage.value = ''
-  isLoading.value = true
+  errorMessage.value = "";
+  isLoading.value = true;
 
   try {
-    await authStore.login(email.value, password.value)
-    router.push('/')
+    await authStore.login(email.value, password.value);
+    router.push("/");
   } catch (error) {
-    console.error(error)
+    console.error(error);
 
-errorMessage.value =
-  error?.response?.data?.message ||
-  error?.message ||
-  'Login failed. Please check your email and password.'
+    errorMessage.value =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Login failed. Please check your email and password.";
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
 }
 </script>
@@ -72,8 +72,12 @@ errorMessage.value =
             {{ errorMessage }}
           </p>
 
-          <button class="button button--primary auth-submit" type="submit" :disabled="isLoading">
-            {{ isLoading ? 'Logging in...' : 'Log in' }}
+          <button
+            class="button button--primary auth-submit"
+            type="submit"
+            :disabled="isLoading"
+          >
+            {{ isLoading ? "Logging in..." : "Log in" }}
           </button>
         </form>
 
