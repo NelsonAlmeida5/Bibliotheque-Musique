@@ -3309,6 +3309,16 @@ img {
   background: rgba(255, 255, 255, 0.02);
 }
 
+.admin-track-row__status {
+  display: flex;
+  align-items: center;
+}
+
+.admin-panel__header code {
+  font-size: 0.88rem;
+  color: var(--light-gray);
+}
+
 @media (max-width: 1000px) {
   .track-detail-hero,
   .track-detail-layout {
