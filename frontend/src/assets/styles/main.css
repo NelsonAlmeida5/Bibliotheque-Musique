@@ -1202,7 +1202,7 @@ img {
 }
 
 .playlist-card__cover--sand {
-  background: linear-gradient(135deg, #3d3933, #514c43);
+  background: linear-gradient(135deg, #94846c, #7e7360);
 }
 
 .playlist-card__cover--violet {
@@ -1214,7 +1214,7 @@ img {
 }
 
 .playlist-card__cover--stone {
-  background: linear-gradient(135deg, #48433d, #655f57);
+  background: linear-gradient(135deg, #615a51, #655f57);
 }
 
 .playlist-card__cover-grid {
@@ -1776,10 +1776,10 @@ img {
   background:
     linear-gradient(
       135deg,
-      rgba(139, 124, 246, 0.2),
+      rgba(177, 124, 246, 0.2),
       rgba(255, 255, 255, 0.03)
     ),
-    linear-gradient(180deg, #2a2d36, #1b1d24);
+    linear-gradient(180deg, #4e5d8a, #1b1d24);
 }
 
 .my-track-card__badge {
@@ -3278,7 +3278,7 @@ img {
       rgba(139, 124, 246, 0.18),
       rgba(255, 255, 255, 0.04)
     ),
-    linear-gradient(180deg, #2a2d36, #1b1d24);
+    linear-gradient(180deg, #404d75, #1b1d24);
 }
 
 .artists-empty-state {
@@ -3622,6 +3622,285 @@ img {
   margin: 0;
   color: #e0b4bd;
   line-height: 1.6;
+}
+
+.my-tracks-panel--tracks {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.my-tracks-panel__header--tracks {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.my-track-toolbar {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.my-track-search {
+  width: min(320px, 100%);
+  height: 46px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--ink);
+  padding: 0 14px;
+  outline: none;
+  font: inherit;
+}
+
+.my-track-search:focus {
+  border-color: var(--theme);
+}
+
+.my-track-search-count {
+  color: var(--light-gray);
+  font-size: 0.88rem;
+}
+
+.my-track-list-wrap {
+  max-height: 1220px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.my-track-list-wrap::-webkit-scrollbar {
+  width: 10px;
+}
+
+.my-track-list-wrap::-webkit-scrollbar-thumb {
+  background: rgba(139, 124, 246, 0.18);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.my-track-card--highlight {
+  border-color: rgba(139, 124, 246, 0.55);
+  box-shadow:
+    inset 0 0 0 1px rgba(139, 124, 246, 0.35),
+    0 0 0 1px rgba(139, 124, 246, 0.12);
+}
+
+.my-track-card__title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.my-track-highlight-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(139, 124, 246, 0.14);
+  border: 1px solid rgba(139, 124, 246, 0.3);
+  color: #c9c0ff;
+  font-size: 0.76rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.playlist-card__cover {
+  position: relative;
+  overflow: hidden;
+}
+
+.playlist-card__cover-grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  gap: 1px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.playlist-card__cover-grid--0,
+.playlist-card__cover-grid--4 {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+}
+
+.playlist-card__cover-grid--1 {
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+}
+
+.playlist-card__cover-grid--2 {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: 1fr;
+}
+
+.playlist-card__cover-grid--3 {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+}
+
+.playlist-card__cover-grid--3 .playlist-card__tile:nth-child(3) {
+  grid-column: 1 / -1;
+}
+
+.playlist-card__tile {
+  display: block;
+  min-width: 0;
+  min-height: 0;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(139, 124, 246, 0.14),
+      rgba(255, 255, 255, 0.03)
+    ),
+    linear-gradient(180deg, #806f53, #27241f);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.playlist-card__tile--placeholder {
+  background:
+    linear-gradient(135deg, rgba(30, 0, 255, 0.1), rgba(255, 255, 255, 0.02)),
+    linear-gradient(180deg, #9b896a, #27241f);
+}
+
+.playlist-card__actions {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+}
+
+@media (max-width: 700px) {
+  .my-track-toolbar {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .my-track-search {
+    width: 100%;
+  }
+
+  .my-track-list-wrap {
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+  }
+}
+
+.admin-stats-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.admin-form__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.admin-form__field select {
+  width: 100%;
+  height: 48px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--ink);
+  padding: 0 14px;
+  outline: none;
+  font: inherit;
+}
+
+.admin-form__field select:focus {
+  border-color: var(--theme);
+}
+
+.admin-panel--tracks {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.admin-track-card-list {
+  display: grid;
+  gap: 14px;
+  max-height: 980px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.admin-track-card {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.admin-track-card__cover {
+  min-height: 120px;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(139, 124, 246, 0.24),
+      rgba(255, 255, 255, 0.04)
+    ),
+    linear-gradient(180deg, #2a2d36, #1b1d24);
+  background-size: cover;
+  background-position: center;
+}
+
+.admin-track-card__body {
+  min-width: 0;
+  padding: 16px;
+}
+
+.admin-track-card__body h3 {
+  margin: 0;
+  font-size: 1.18rem;
+  font-weight: 500;
+}
+
+.admin-track-card__meta-line {
+  margin: 8px 0 0;
+  color: var(--light-gray);
+}
+
+.admin-track-card__description {
+  margin: 12px 0 0;
+  color: var(--warm-gray);
+  line-height: 1.6;
+}
+
+.admin-track-card__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+@media (max-width: 900px) {
+  .admin-stats-grid,
+  .admin-form__grid,
+  .admin-crud-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-track-card {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-track-card__cover {
+    min-height: 180px;
+  }
+
+  .admin-track-card-list {
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+  }
 }
 
 @media (max-width: 900px) {

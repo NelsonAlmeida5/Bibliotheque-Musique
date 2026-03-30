@@ -910,7 +910,10 @@ onBeforeUnmount(() => {
 
                     <RouterLink
                       v-else
-                      to="/my-tracks"
+                      :to="{
+                        path: '/my-tracks',
+                        query: { highlight: String(track.id) },
+                      }"
                       class="button button--details button--sm"
                     >
                       My Tracks

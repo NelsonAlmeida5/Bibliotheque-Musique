@@ -12,6 +12,8 @@ export const createTrackValidator = vine.compile(
 
     custom_artist_name: vine.string().minLength(2).maxLength(150).optional(),
     custom_category_name: vine.string().minLength(2).maxLength(150).optional(),
+
+    is_public: vine.boolean().optional(),
   })
 )
 
@@ -27,5 +29,7 @@ export const updateTrackValidator = vine.compile(
 
     custom_artist_name: vine.string().minLength(2).maxLength(150).optional(),
     custom_category_name: vine.string().minLength(2).maxLength(150).optional(),
+
+    is_public: vine.boolean().optional(),
   })
 )

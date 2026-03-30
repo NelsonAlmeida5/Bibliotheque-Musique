@@ -39,7 +39,34 @@ function getApiErrorMessage(error, fallbackMessage) {
   );
 }
 
+function toTimestamp(dateValue) {
+  if (!dateValue) return 0;
+
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return 0;
+
+  return date.getTime();
+}
+
+function normalizeTrack(item) {
+  return {
+    id: item.id,
+    coverUrl: item.coverUrl ?? item.cover_url ?? "",
+    createdAt: item.createdAt ?? item.created_at ?? null,
+  };
+}
+
+function buildCoverTracks(tracks) {
+  return [...tracks]
+    .sort((a, b) => toTimestamp(b.createdAt) - toTimestamp(a.createdAt))
+    .slice(0, 4);
+}
+
 function normalizePlaylist(item) {
+  const normalizedTracks = Array.isArray(item.tracks)
+    ? item.tracks.map(normalizeTrack)
+    : [];
+
   return {
     id: item.id,
     name: item.name ?? "Untitled playlist",
@@ -50,14 +77,20 @@ function normalizePlaylist(item) {
       item.createdAt ??
       item.created_at ??
       null,
-    tracks: Array.isArray(item.tracks) ? item.tracks : [],
-    tracksCount: Array.isArray(item.tracks) ? item.tracks.length : 0,
+    tracks: normalizedTracks,
+    tracksCount: normalizedTracks.length,
+    coverTracks: buildCoverTracks(normalizedTracks),
   };
 }
 
-function getPlaylistVariant(index) {
-  const variants = ["sand", "violet", "blue", "stone"];
-  return variants[index % variants.length];
+function getTrackTileStyle(track) {
+  if (!track?.coverUrl) return {};
+
+  return {
+    backgroundImage: `linear-gradient(135deg, rgba(127, 120, 226, 0.16), rgba(98, 51, 129, 0.22)), url("${track.coverUrl}")`,
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+  };
 }
 
 function formatUpdatedLabel(dateValue) {
@@ -251,15 +284,37 @@ onMounted(() => {
           </button>
 
           <article
-            v-for="(playlist, index) in playlists"
+            v-for="playlist in playlists"
             :key="playlist.id"
             class="playlist-card"
             @click="openPlaylist(playlist.id)"
           >
-            <div
-              class="playlist-card__cover"
-              :class="`playlist-card__cover--${getPlaylistVariant(index)}`"
-            >
+            <div class="playlist-card__cover">
+              <div
+                class="playlist-card__cover-grid"
+                :class="`playlist-card__cover-grid--${playlist.coverTracks.length || 0}`"
+              >
+                <template v-if="playlist.coverTracks.length">
+                  <span
+                    v-for="track in playlist.coverTracks"
+                    :key="track.id"
+                    class="playlist-card__tile"
+                    :class="{
+                      'playlist-card__tile--placeholder': !track.coverUrl,
+                    }"
+                    :style="getTrackTileStyle(track)"
+                  ></span>
+                </template>
+
+                <template v-else>
+                  <span
+                    v-for="tileIndex in 4"
+                    :key="`empty-${tileIndex}`"
+                    class="playlist-card__tile playlist-card__tile--placeholder"
+                  ></span>
+                </template>
+              </div>
+
               <div class="playlist-card__actions">
                 <button
                   type="button"
@@ -278,13 +333,6 @@ onMounted(() => {
                 >
                   🗑
                 </button>
-              </div>
-
-              <div class="playlist-card__cover-grid">
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
               </div>
             </div>
 

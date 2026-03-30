@@ -6,8 +6,12 @@ import {
   onMounted,
   reactive,
   ref,
+  watch,
 } from "vue";
+import { useRoute } from "vue-router";
 import api from "../services/api";
+
+const route = useRoute();
 
 const artistOptions = ref([]);
 const categoryOptions = ref([]);
@@ -39,8 +43,21 @@ const form = ref({
 const showArtistSuggestions = ref(false);
 const showCategorySuggestions = ref(false);
 
+const trackSearch = ref("");
+const highlightedTrackElement = ref(null);
+
 const isEditing = computed(() => form.value.id !== null);
 const privateTrackCount = computed(() => tracks.value.length);
+
+const highlightedTrackId = computed(() => {
+  const rawValue = Number(route.query.highlight);
+
+  if (!Number.isInteger(rawValue) || rawValue <= 0) {
+    return null;
+  }
+
+  return rawValue;
+});
 
 function normalize(value) {
   return String(value || "")
@@ -114,6 +131,31 @@ function getTrackCategoryLabel(track) {
   return "Unspecified category";
 }
 
+function isTrackHighlighted(trackId) {
+  return (
+    highlightedTrackId.value !== null &&
+    Number(trackId) === Number(highlightedTrackId.value)
+  );
+}
+
+function setHighlightedTrackRef(element, trackId) {
+  if (!isTrackHighlighted(trackId)) return;
+  highlightedTrackElement.value = element || null;
+}
+
+async function revealHighlightedTrack() {
+  if (highlightedTrackId.value === null) return;
+
+  await nextTick();
+
+  if (highlightedTrackElement.value) {
+    highlightedTrackElement.value.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+  }
+}
+
 const filteredArtistOptions = computed(() => {
   const search = normalize(form.value.artistInput);
   if (!search) return artistOptions.value;
@@ -131,6 +173,38 @@ const filteredCategoryOptions = computed(() => {
     normalize(category.name).includes(search),
   );
 });
+
+const filteredTracks = computed(() => {
+  const search = normalize(trackSearch.value);
+
+  let result = [...tracks.value];
+
+  if (search) {
+    result = result.filter((track) => {
+      return (
+        normalize(track.title).includes(search) ||
+        normalize(track.description).includes(search) ||
+        normalize(getTrackArtistLabel(track)).includes(search) ||
+        normalize(getTrackCategoryLabel(track)).includes(search)
+      );
+    });
+  }
+
+  result.sort((a, b) => {
+    const aIsHighlighted = isTrackHighlighted(a.id) ? 1 : 0;
+    const bIsHighlighted = isTrackHighlighted(b.id) ? 1 : 0;
+
+    if (aIsHighlighted !== bIsHighlighted) {
+      return bIsHighlighted - aIsHighlighted;
+    }
+
+    return Number(b.id) - Number(a.id);
+  });
+
+  return result;
+});
+
+const filteredTrackCount = computed(() => filteredTracks.value.length);
 
 function findExactArtistMatch(input) {
   return (
@@ -243,6 +317,8 @@ async function loadTracks({ resetPlayerUi = false } = {}) {
   if (resetPlayerUi) {
     resetAllPlayers();
   }
+
+  await revealHighlightedTrack();
 }
 
 function buildArtistPayload() {
@@ -447,9 +523,7 @@ function pauseOtherPlayers(activeTrackId) {
     if (player && typeof player.pauseVideo === "function") {
       try {
         player.pauseVideo();
-      } catch {
-        // ignore player pause errors
-      }
+      } catch {}
     }
   }
 }
@@ -461,9 +535,7 @@ function destroyPlayer(trackId, { preserveState = false } = {}) {
   if (player && typeof player.destroy === "function") {
     try {
       player.destroy();
-    } catch {
-      // ignore player destroy errors
-    }
+    } catch {}
   }
 
   playerInstances.delete(key);
@@ -803,6 +875,14 @@ async function initializePage() {
   }
 }
 
+watch(
+  () => route.query.highlight,
+  async () => {
+    highlightedTrackElement.value = null;
+    await revealHighlightedTrack();
+  },
+);
+
 onMounted(() => {
   initializePage();
 });
@@ -994,8 +1074,8 @@ onBeforeUnmount(() => {
           </form>
         </section>
 
-        <section class="my-tracks-panel">
-          <div class="my-tracks-panel__header">
+        <section class="my-tracks-panel my-tracks-panel--tracks">
+          <div class="my-tracks-panel__header my-tracks-panel__header--tracks">
             <div>
               <h2>Your tracks</h2>
               <p>
@@ -1003,121 +1083,159 @@ onBeforeUnmount(() => {
                 library.
               </p>
             </div>
+
+            <div class="my-track-toolbar">
+              <input
+                v-model="trackSearch"
+                type="text"
+                class="my-track-search"
+                placeholder="Search your tracks..."
+              />
+
+              <span class="my-track-search-count">
+                {{ filteredTrackCount }} shown
+              </span>
+            </div>
           </div>
 
           <div v-if="isInitialLoading" class="my-track-empty-state">
             <p>Loading your private tracks...</p>
           </div>
 
-          <div v-else-if="tracks.length" class="my-track-list">
-            <article
-              v-for="track in tracks"
-              :key="track.id"
-              class="my-track-card"
-            >
-              <div
-                class="my-track-card__cover"
+          <div v-else-if="tracks.length" class="my-track-list-wrap">
+            <div v-if="filteredTracks.length" class="my-track-list">
+              <article
+                v-for="track in filteredTracks"
+                :key="track.id"
+                class="my-track-card"
                 :class="{
-                  'my-track-card__cover--placeholder': !track.coverUrl,
+                  'my-track-card--highlight': isTrackHighlighted(track.id),
                 }"
-                :style="
-                  track.coverUrl
-                    ? `background-image: url('${track.coverUrl}')`
-                    : ''
-                "
-              ></div>
+                :ref="(el) => setHighlightedTrackRef(el, track.id)"
+              >
+                <div
+                  class="my-track-card__cover"
+                  :class="{
+                    'my-track-card__cover--placeholder': !track.coverUrl,
+                  }"
+                  :style="
+                    track.coverUrl
+                      ? `background-image: url('${track.coverUrl}')`
+                      : ''
+                  "
+                ></div>
 
-              <div class="my-track-card__body">
-                <div class="my-track-card__top">
-                  <div class="my-track-card__top-main">
-                    <h3>{{ track.title }}</h3>
-                    <p>
-                      {{ getTrackArtistLabel(track) }} ·
-                      {{ getTrackCategoryLabel(track) }}
-                    </p>
-                  </div>
-                </div>
+                <div class="my-track-card__body">
+                  <div class="my-track-card__top">
+                    <div class="my-track-card__top-main">
+                      <div class="my-track-card__title-row">
+                        <h3>{{ track.title }}</h3>
 
-                <p class="my-track-card__description">
-                  {{ track.description || "No description provided." }}
-                </p>
+                        <span
+                          v-if="isTrackHighlighted(track.id)"
+                          class="my-track-highlight-badge"
+                        >
+                          From playlist
+                        </span>
+                      </div>
 
-                <div class="my-track-card__meta">
-                  <span>{{ getTrackPlayerState(track.id).label }}</span>
-                  <span>Owner track</span>
-                </div>
-
-                <div class="my-track-card__actions">
-                  <button
-                    type="button"
-                    class="button button--secondary button--sm"
-                    @click="togglePlayerPanel(track)"
-                  >
-                    {{ isPlayerOpen(track.id) ? "Hide player" : "Open player" }}
-                  </button>
-
-                  <button
-                    type="button"
-                    class="button button--details button--sm"
-                    @click="loadTrackIntoForm(track)"
-                  >
-                    Edit
-                  </button>
-
-                  <button
-                    type="button"
-                    class="button button--danger button--sm"
-                    @click="deleteTrack(track.id, track.title)"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-
-              <div v-if="isPlayerOpen(track.id)" class="my-track-player-panel">
-                <div class="my-track-player-panel__top">
-                  <div>
-                    <h4>YouTube player</h4>
-                    <p>{{ getTrackPlayerState(track.id).label }}</p>
+                      <p>
+                        {{ getTrackArtistLabel(track) }} ·
+                        {{ getTrackCategoryLabel(track) }}
+                      </p>
+                    </div>
                   </div>
 
-                  <div class="my-track-player-toolbar">
+                  <p class="my-track-card__description">
+                    {{ track.description || "No description provided." }}
+                  </p>
+
+                  <div class="my-track-card__meta">
+                    <span>{{ getTrackPlayerState(track.id).label }}</span>
+                    <span>Owner track</span>
+                  </div>
+
+                  <div class="my-track-card__actions">
                     <button
                       type="button"
-                      class="button button--details button--sm"
-                      @click="togglePlayPause(track)"
+                      class="button button--secondary button--sm"
+                      @click="togglePlayerPanel(track)"
                     >
                       {{
-                        getTrackPlayerState(track.id).phase === "playing"
-                          ? "Pause"
-                          : "Play"
+                        isPlayerOpen(track.id) ? "Hide player" : "Open player"
                       }}
                     </button>
 
                     <button
                       type="button"
-                      class="button button--ghost button--sm"
-                      @click="stopPlayback(track.id)"
+                      class="button button--details button--sm"
+                      @click="loadTrackIntoForm(track)"
                     >
-                      Stop
+                      Edit
+                    </button>
+
+                    <button
+                      type="button"
+                      class="button button--danger button--sm"
+                      @click="deleteTrack(track.id, track.title)"
+                    >
+                      Delete
                     </button>
                   </div>
                 </div>
 
-                <p
-                  v-if="getTrackPlayerState(track.id).error"
-                  class="my-track-player-error"
-                >
-                  {{ getTrackPlayerState(track.id).error }}
-                </p>
-
                 <div
-                  v-else
-                  class="my-track-player-host"
-                  :id="getPlayerHostId(track.id)"
-                ></div>
-              </div>
-            </article>
+                  v-if="isPlayerOpen(track.id)"
+                  class="my-track-player-panel"
+                >
+                  <div class="my-track-player-panel__top">
+                    <div>
+                      <h4>YouTube player</h4>
+                      <p>{{ getTrackPlayerState(track.id).label }}</p>
+                    </div>
+
+                    <div class="my-track-player-toolbar">
+                      <button
+                        type="button"
+                        class="button button--details button--sm"
+                        @click="togglePlayPause(track)"
+                      >
+                        {{
+                          getTrackPlayerState(track.id).phase === "playing"
+                            ? "Pause"
+                            : "Play"
+                        }}
+                      </button>
+
+                      <button
+                        type="button"
+                        class="button button--ghost button--sm"
+                        @click="stopPlayback(track.id)"
+                      >
+                        Stop
+                      </button>
+                    </div>
+                  </div>
+
+                  <p
+                    v-if="getTrackPlayerState(track.id).error"
+                    class="my-track-player-error"
+                  >
+                    {{ getTrackPlayerState(track.id).error }}
+                  </p>
+
+                  <div
+                    v-else
+                    class="my-track-player-host"
+                    :id="getPlayerHostId(track.id)"
+                  ></div>
+                </div>
+              </article>
+            </div>
+
+            <div v-else class="my-track-empty-state">
+              <p>No private tracks match your search.</p>
+            </div>
           </div>
 
           <div v-else class="my-track-empty-state">

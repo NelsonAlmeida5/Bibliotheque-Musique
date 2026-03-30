@@ -63,19 +63,22 @@ function normalizeTrack(item) {
     id: item.id,
     title: item.title ?? "",
     description: item.description ?? "",
+    embedUrl: item.embedUrl ?? item.embed_url ?? "",
     coverUrl: item.coverUrl ?? item.cover_url ?? "",
     isPublic: item.isPublic ?? item.is_public ?? false,
-    artist:
+    artistId: item.artistId ?? item.artist_id ?? item.artist?.id ?? null,
+    categoryId:
+      item.categoryId ?? item.category_id ?? item.category?.id ?? null,
+    artistName:
       item.artist?.name ??
       item.customArtistName ??
       item.custom_artist_name ??
       "Unknown artist",
-    category:
+    categoryName:
       item.category?.name ??
       item.customCategoryName ??
       item.custom_category_name ??
       "Uncategorized",
-    owner: item.user?.username ?? item.user?.email ?? "Unknown owner",
   };
 }
 
@@ -138,30 +141,40 @@ const categoryForm = ref({
 const isEditingCategory = computed(() => categoryForm.value.id !== null);
 
 /* -------------------- Tracks -------------------- */
+const trackForm = ref({
+  id: null,
+  title: "",
+  embedUrl: "",
+  coverUrl: "",
+  description: "",
+  artistId: "",
+  categoryId: "",
+});
+
+const isEditingTrack = computed(() => trackForm.value.id !== null);
+
 const filteredTracks = computed(() => {
   const search = normalize(trackSearch.value);
-  if (!search) return tracks.value;
+  let result = [...tracks.value];
 
-  return tracks.value.filter((track) => {
-    const visibility = track.isPublic ? "public" : "private";
+  if (search) {
+    result = result.filter((track) => {
+      return (
+        normalize(track.title).includes(search) ||
+        normalize(track.description).includes(search) ||
+        normalize(track.artistName).includes(search) ||
+        normalize(track.categoryName).includes(search)
+      );
+    });
+  }
 
-    return (
-      normalize(track.title).includes(search) ||
-      normalize(track.artist).includes(search) ||
-      normalize(track.category).includes(search) ||
-      normalize(track.owner).includes(search) ||
-      visibility.includes(search)
-    );
-  });
+  return result.sort((a, b) => Number(b.id) - Number(a.id));
 });
 
 /* -------------------- Overview -------------------- */
 const totalArtists = computed(() => artists.value.length);
 const totalCategories = computed(() => categories.value.length);
 const totalTracks = computed(() => tracks.value.length);
-const publicTracks = computed(
-  () => tracks.value.filter((track) => track.isPublic).length,
-);
 
 /* -------------------- Loaders -------------------- */
 async function loadArtists() {
@@ -353,6 +366,85 @@ async function deleteCategory(id, name) {
 }
 
 /* -------------------- Track actions -------------------- */
+function resetTrackForm() {
+  trackForm.value = {
+    id: null,
+    title: "",
+    embedUrl: "",
+    coverUrl: "",
+    description: "",
+    artistId: "",
+    categoryId: "",
+  };
+}
+
+function editTrack(track) {
+  trackForm.value = {
+    id: track.id,
+    title: track.title,
+    embedUrl: track.embedUrl,
+    coverUrl: track.coverUrl,
+    description: track.description,
+    artistId: track.artistId ? String(track.artistId) : "",
+    categoryId: track.categoryId ? String(track.categoryId) : "",
+  };
+
+  activeTab.value = "tracks";
+  clearFeedback();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+async function saveTrack() {
+  clearFeedback();
+
+  if (!trackForm.value.title.trim()) {
+    actionError.value = "Track title is required.";
+    return;
+  }
+
+  if (!trackForm.value.embedUrl.trim()) {
+    actionError.value = "Embed URL is required.";
+    return;
+  }
+
+  if (!trackForm.value.artistId) {
+    actionError.value = "Please select an artist.";
+    return;
+  }
+
+  if (!trackForm.value.categoryId) {
+    actionError.value = "Please select a category.";
+    return;
+  }
+
+  const payload = {
+    title: trackForm.value.title.trim(),
+    embed_url: trackForm.value.embedUrl.trim(),
+    cover_url: trackForm.value.coverUrl.trim() || null,
+    description: trackForm.value.description.trim() || null,
+    artist_id: Number(trackForm.value.artistId),
+    category_id: Number(trackForm.value.categoryId),
+    custom_artist_name: null,
+    custom_category_name: null,
+    is_public: true,
+  };
+
+  try {
+    if (isEditingTrack.value) {
+      await api.put(`/tracks/${trackForm.value.id}`, payload);
+      actionSuccess.value = "Public track updated successfully.";
+    } else {
+      await api.post("/tracks", payload);
+      actionSuccess.value = "Public track created successfully.";
+    }
+
+    await loadTracks();
+    resetTrackForm();
+  } catch (error) {
+    actionError.value = getApiErrorMessage(error, "Unable to save the track.");
+  }
+}
+
 async function deleteTrack(id, title) {
   clearFeedback();
 
@@ -362,6 +454,11 @@ async function deleteTrack(id, title) {
   try {
     await api.delete(`/tracks/${id}`);
     await loadTracks();
+
+    if (trackForm.value.id === id) {
+      resetTrackForm();
+    }
+
     actionSuccess.value = "Track deleted successfully.";
   } catch (error) {
     actionError.value = getApiErrorMessage(
@@ -453,11 +550,6 @@ onMounted(() => {
                 <span>Catalog tracks</span>
                 <strong>{{ totalTracks }}</strong>
               </article>
-
-              <article class="admin-stat-card">
-                <span>Track scope</span>
-                <strong>{{ publicTracks }} public</strong>
-              </article>
             </div>
 
             <div class="admin-overview-grid">
@@ -486,8 +578,10 @@ onMounted(() => {
               </article>
 
               <article class="admin-overview-card">
-                <h2>Moderate catalog tracks</h2>
-                <p>Review and remove public tracks from the catalog.</p>
+                <h2>Manage catalog tracks</h2>
+                <p>
+                  Create, edit, and remove the public tracks in the catalog.
+                </p>
                 <button
                   type="button"
                   class="button button--secondary button--sm"
@@ -496,17 +590,6 @@ onMounted(() => {
                   Go to Tracks
                 </button>
               </article>
-            </div>
-
-            <div class="admin-simple-card">
-              <div>
-                <h2>Current backend scope</h2>
-                <p>
-                  The current admin track list reflects public catalog tracks. A
-                  dedicated admin endpoint would be needed to list every private
-                  track from every user.
-                </p>
-              </div>
             </div>
           </section>
 
@@ -544,8 +627,8 @@ onMounted(() => {
                   <textarea
                     id="artist-description"
                     v-model="artistForm.description"
-                    rows="6"
-                    placeholder="Artist description"
+                    rows="5"
+                    placeholder="Describe this artist"
                   ></textarea>
                 </div>
 
@@ -649,8 +732,8 @@ onMounted(() => {
                   <textarea
                     id="category-description"
                     v-model="categoryForm.description"
-                    rows="6"
-                    placeholder="Category description"
+                    rows="5"
+                    placeholder="Describe this category"
                   ></textarea>
                 </div>
 
@@ -726,72 +809,178 @@ onMounted(() => {
           </section>
 
           <!-- Tracks -->
-          <section v-if="activeTab === 'tracks'" class="admin-panel">
-            <div class="admin-panel__header">
-              <h2>Catalog tracks</h2>
-              <p>
-                Current backend scope: public tracks returned by
-                <code>/tracks</code>.
-              </p>
-            </div>
+          <section v-if="activeTab === 'tracks'" class="admin-crud-layout">
+            <section class="admin-panel">
+              <div class="admin-panel__header">
+                <h2>
+                  {{
+                    isEditingTrack ? "Edit public track" : "Create public track"
+                  }}
+                </h2>
+                <p>Manage the public tracks shown in the catalog.</p>
+              </div>
 
-            <div class="admin-searchbar">
-              <input
-                v-model="trackSearch"
-                type="text"
-                placeholder="Search tracks, artist, category, owner..."
-              />
-            </div>
-
-            <div v-if="filteredTracks.length" class="admin-track-list">
-              <article
-                v-for="track in filteredTracks"
-                :key="track.id"
-                class="admin-track-row"
-              >
-                <div
-                  class="admin-track-row__cover"
-                  :style="getCoverStyle(track.coverUrl)"
-                ></div>
-
-                <div class="admin-track-row__main">
-                  <h3>{{ track.title }}</h3>
-                  <p>{{ track.artist }} · {{ track.category }}</p>
+              <form class="admin-form" @submit.prevent="saveTrack">
+                <div class="admin-form__field">
+                  <label for="track-title">Title</label>
+                  <input
+                    id="track-title"
+                    v-model="trackForm.title"
+                    type="text"
+                    placeholder="Track title"
+                  />
                 </div>
 
-                <div class="admin-track-row__owner">
-                  <span>Owner</span>
-                  <strong>{{ track.owner }}</strong>
+                <div class="admin-form__field">
+                  <label for="track-embed-url">Embed URL</label>
+                  <input
+                    id="track-embed-url"
+                    v-model="trackForm.embedUrl"
+                    type="text"
+                    placeholder="https://www.youtube.com/embed/..."
+                  />
                 </div>
 
-                <div class="admin-track-row__status">
-                  <span class="admin-track-row__badge">
-                    {{ track.isPublic ? "Public" : "Private" }}
-                  </span>
+                <div class="admin-form__field">
+                  <label for="track-cover-url">Cover URL</label>
+                  <input
+                    id="track-cover-url"
+                    v-model="trackForm.coverUrl"
+                    type="text"
+                    placeholder="https://..."
+                  />
                 </div>
 
-                <div class="admin-track-row__actions">
-                  <RouterLink
-                    :to="{ name: 'track-detail', params: { id: track.id } }"
-                    class="button button--details button--sm"
-                  >
-                    Details
-                  </RouterLink>
+                <div class="admin-form__field">
+                  <label for="track-description">Description</label>
+                  <textarea
+                    id="track-description"
+                    v-model="trackForm.description"
+                    rows="5"
+                    placeholder="Track description"
+                  ></textarea>
+                </div>
 
+                <div class="admin-form__grid">
+                  <div class="admin-form__field">
+                    <label for="track-artist-select">Artist</label>
+                    <select
+                      id="track-artist-select"
+                      v-model="trackForm.artistId"
+                    >
+                      <option value="">Select an artist</option>
+                      <option
+                        v-for="artist in artists"
+                        :key="artist.id"
+                        :value="String(artist.id)"
+                      >
+                        {{ artist.name }}
+                      </option>
+                    </select>
+                  </div>
+
+                  <div class="admin-form__field">
+                    <label for="track-category-select">Category</label>
+                    <select
+                      id="track-category-select"
+                      v-model="trackForm.categoryId"
+                    >
+                      <option value="">Select a category</option>
+                      <option
+                        v-for="category in categories"
+                        :key="category.id"
+                        :value="String(category.id)"
+                      >
+                        {{ category.name }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="admin-form__actions">
                   <button
                     type="button"
-                    class="button button--danger button--sm"
-                    @click="deleteTrack(track.id, track.title)"
+                    class="button button--ghost"
+                    @click="resetTrackForm"
                   >
-                    Delete
+                    Clear
+                  </button>
+
+                  <button type="submit" class="button button--primary">
+                    {{
+                      isEditingTrack ? "Save changes" : "Create public track"
+                    }}
                   </button>
                 </div>
-              </article>
-            </div>
+              </form>
+            </section>
 
-            <div v-else class="admin-empty-state">
-              <p>No catalog tracks match your search.</p>
-            </div>
+            <section class="admin-panel admin-panel--tracks">
+              <div class="admin-panel__header">
+                <h2>Catalog tracks</h2>
+                <p>If you have many tracks, use search and scroll the cards.</p>
+              </div>
+
+              <div class="admin-searchbar">
+                <input
+                  v-model="trackSearch"
+                  type="text"
+                  placeholder="Search tracks, artist, category..."
+                />
+              </div>
+
+              <div v-if="filteredTracks.length" class="admin-track-card-list">
+                <article
+                  v-for="track in filteredTracks"
+                  :key="track.id"
+                  class="admin-track-card"
+                >
+                  <div
+                    class="admin-track-card__cover"
+                    :style="getCoverStyle(track.coverUrl)"
+                  ></div>
+
+                  <div class="admin-track-card__body">
+                    <h3>{{ track.title }}</h3>
+                    <p class="admin-track-card__meta-line">
+                      {{ track.artistName }} · {{ track.categoryName }}
+                    </p>
+                    <p class="admin-track-card__description">
+                      {{ track.description || "No description provided." }}
+                    </p>
+
+                    <div class="admin-track-card__actions">
+                      <RouterLink
+                        :to="{ name: 'track-detail', params: { id: track.id } }"
+                        class="button button--details button--sm"
+                      >
+                        Details
+                      </RouterLink>
+
+                      <button
+                        type="button"
+                        class="button button--details button--sm"
+                        @click="editTrack(track)"
+                      >
+                        Edit
+                      </button>
+
+                      <button
+                        type="button"
+                        class="button button--danger button--sm"
+                        @click="deleteTrack(track.id, track.title)"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              </div>
+
+              <div v-else class="admin-empty-state">
+                <p>No tracks match your search.</p>
+              </div>
+            </section>
           </section>
         </template>
       </div>

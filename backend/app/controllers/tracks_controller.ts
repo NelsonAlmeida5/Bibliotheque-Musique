@@ -95,7 +95,7 @@ export default class TracksController {
       customArtistName: data.custom_artist_name ?? null,
       customCategoryName: data.custom_category_name ?? null,
       userId: user.id,
-      isPublic: false,
+      isPublic: user.role === 'admin' ? (data.is_public ?? true) : false,
     })
 
     await track.load('artist')
@@ -163,6 +163,10 @@ export default class TracksController {
     if (data.embed_url !== undefined) track.embedUrl = data.embed_url
     if (data.cover_url !== undefined) track.coverUrl = data.cover_url
     if (data.description !== undefined) track.description = data.description
+
+    if (user.role === 'admin' && data.is_public !== undefined) {
+      track.isPublic = data.is_public
+    }
 
     await track.save()
 
