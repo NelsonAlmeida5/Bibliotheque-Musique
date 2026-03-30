@@ -1,137 +1,143 @@
 <script setup>
-import { computed, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
+import api from "../services/api";
 
 const route = useRoute();
-const artistId = Number(route.params.id);
 
-const artistsMap = {
-  1: {
-    id: 1,
-    name: "Twin Tribes",
-    genres: "Darkwave · Post-Punk",
-    country: "United States",
-    activeSince: "2017",
-    tracksCount: 12,
-    followersLabel: "Favorite by 84 users",
-    coverVariant: "violet",
-    description:
-      "Twin Tribes is a darkwave duo known for sharp synth lines, melancholic vocals, and a polished nocturnal aesthetic. Their sound blends post-punk tension with modern production, creating tracks that feel both romantic and cold.",
-    notes:
-      "Their strongest material tends to balance melodic immediacy with atmosphere. They fit especially well in darkwave, goth, and late-night synth-driven playlists.",
-    topTracks: [
-      {
-        id: 1,
-        title: "Monolith",
-        category: "Darkwave",
-        rating: "4.8",
-      },
-      {
-        id: 2,
-        title: "Ritual",
-        category: "Goth Rock",
-        rating: "4.6",
-      },
-      {
-        id: 11,
-        title: "Shadows",
-        category: "Darkwave",
-        rating: "4.5",
-      },
-    ],
-  },
-  2: {
-    id: 2,
-    name: "She Past Away",
-    genres: "Goth Rock · Darkwave",
-    country: "Türkiye",
-    activeSince: "2006",
-    tracksCount: 9,
-    followersLabel: "Favorite by 67 users",
-    coverVariant: "sand",
-    description:
-      "She Past Away is a Turkish duo blending gothic rock textures, post-punk rhythm, and hypnotic vocal delivery. Their music carries a ritualistic and brooding energy with a distinct identity.",
-    notes:
-      "The project stands out through its mood consistency, strong bass lines, and the particular tension created by its language, pacing, and minimalist repetition.",
-    topTracks: [
-      {
-        id: 3,
-        title: "Kasvetli Kutlama",
-        category: "Goth Rock",
-        rating: "4.9",
-      },
-      {
-        id: 12,
-        title: "Durdu Dünya",
-        category: "Darkwave",
-        rating: "4.7",
-      },
-      {
-        id: 13,
-        title: "Ruh",
-        category: "Goth Rock",
-        rating: "4.5",
-      },
-    ],
-  },
-  3: {
-    id: 3,
-    name: "Molchat Doma",
-    genres: "Post-Punk · New Wave",
-    country: "Belarus",
-    activeSince: "2017",
-    tracksCount: 7,
-    followersLabel: "Favorite by 93 users",
-    coverVariant: "blue",
-    description:
-      "Molchat Doma is a Belarusian band known for stark post-punk arrangements, cold synth tones, and a restrained, urban melancholy. Their style feels minimal, severe, and immediately recognizable.",
-    notes:
-      "They work extremely well for playlists centered on cold wave, restrained synths, and bleak city-night atmosphere. The emotional tone is dry, distant, and memorable.",
-    topTracks: [
-      {
-        id: 4,
-        title: "Sudno",
-        category: "Post-Punk",
-        rating: "4.7",
-      },
-      {
-        id: 14,
-        title: "Kletka",
-        category: "New Wave",
-        rating: "4.6",
-      },
-      {
-        id: 15,
-        title: "Toska",
-        category: "Post-Punk",
-        rating: "4.5",
-      },
-    ],
-  },
-};
+const artist = ref(null);
+const isLoading = ref(true);
+const errorMessage = ref("");
 
-const fallbackArtist = {
-  id: artistId,
-  name: "Artist not found",
-  genres: "Unknown",
-  country: "Unknown",
-  activeSince: "-",
-  tracksCount: 0,
-  followersLabel: "No data",
-  coverVariant: "stone",
-  description:
-    "This artist could not be loaded. The backend connection will be added next.",
-  notes:
-    "No additional information is available for this artist at the moment.",
-  topTracks: [],
-};
+const artistId = computed(() => Number(route.params.id));
 
-const artist = computed(() => artistsMap[artistId] || fallbackArtist);
-const isFavorite = ref(true);
-
-function toggleFavorite() {
-  isFavorite.value = !isFavorite.value;
+function extractCollection(payload) {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  return [];
 }
+
+function normalizeArtist(item) {
+  return {
+    id: item.id,
+    name: item.name ?? "Unknown artist",
+    description: item.description ?? "",
+    imageUrl: item.imageUrl ?? item.image_url ?? "",
+    tracks: Array.isArray(item.tracks)
+      ? item.tracks.map((track) => ({
+          id: track.id,
+          title: track.title ?? "",
+          description: track.description ?? "",
+          coverUrl: track.coverUrl ?? track.cover_url ?? "",
+          createdAt: track.createdAt ?? track.created_at ?? null,
+          category: track.category
+            ? {
+                id: track.category.id,
+                name: track.category.name ?? "Uncategorized",
+              }
+            : null,
+        }))
+      : [],
+  };
+}
+
+function getArtistInitial(name) {
+  return (
+    String(name || "?")
+      .trim()
+      .charAt(0)
+      .toUpperCase() || "?"
+  );
+}
+
+function getArtistCoverStyle(artistValue) {
+  if (!artistValue?.imageUrl) return {};
+
+  return {
+    backgroundImage: `linear-gradient(135deg, rgba(127, 120, 226, 0.18), rgba(98, 51, 129, 0.34)), url("${artistValue.imageUrl}")`,
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+  };
+}
+
+function getTrackCoverStyle(track) {
+  if (!track?.coverUrl) return {};
+
+  return {
+    backgroundImage: `linear-gradient(135deg, rgba(127, 120, 226, 0.18), rgba(98, 51, 129, 0.34)), url("${track.coverUrl}")`,
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+  };
+}
+
+function getTrackCategoryLabel(track) {
+  return track?.category?.name || "Uncategorized";
+}
+
+function formatDate(dateValue) {
+  if (!dateValue) return "Unknown date";
+
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return "Unknown date";
+
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+const tracksCount = computed(() => artist.value?.tracks?.length ?? 0);
+
+const categoriesCount = computed(() => {
+  if (!artist.value?.tracks?.length) return 0;
+
+  const uniqueNames = new Set(
+    artist.value.tracks.map((track) => getTrackCategoryLabel(track)),
+  );
+
+  return uniqueNames.size;
+});
+
+const latestReleaseLabel = computed(() => {
+  const latest = artist.value?.tracks?.[0];
+  if (!latest?.createdAt) return "No release date";
+
+  return formatDate(latest.createdAt);
+});
+
+const artistProfileText = computed(() => {
+  if (artist.value?.description?.trim()) return artist.value.description;
+
+  return "No description is available for this artist yet.";
+});
+
+async function loadArtist() {
+  isLoading.value = true;
+  errorMessage.value = "";
+
+  try {
+    const response = await api.get(`/artists/${artistId.value}`);
+    artist.value = normalizeArtist(response.data);
+  } catch (error) {
+    errorMessage.value =
+      error?.response?.data?.message || "Unable to load this artist right now.";
+    artist.value = null;
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+onMounted(() => {
+  loadArtist();
+});
+
+watch(
+  () => route.params.id,
+  () => {
+    loadArtist();
+  },
+);
 </script>
 
 <template>
@@ -141,120 +147,137 @@ function toggleFavorite() {
         ← Back to Artists
       </RouterLink>
 
-      <section class="artist-detail-hero">
-        <div
-          class="artist-detail-hero__cover"
-          :class="`artist-detail-hero__cover--${artist.coverVariant}`"
-        >
-          <div class="artist-detail-hero__monogram">
-            {{ artist.name.charAt(0).toUpperCase() }}
-          </div>
-        </div>
-
-        <div class="artist-detail-hero__content">
-          <p class="artist-detail-eyebrow">{{ artist.genres }}</p>
-
-          <h1>{{ artist.name }}</h1>
-
-          <p class="artist-detail-description">
-            {{ artist.description }}
-          </p>
-
-          <div class="artist-detail-stats">
-            <span>{{ artist.country }}</span>
-            <span>Active since {{ artist.activeSince }}</span>
-            <span>{{ artist.tracksCount }} tracks</span>
-            <span>{{ artist.followersLabel }}</span>
-          </div>
-
-          <div class="artist-detail-actions">
-            <button
-              type="button"
-              class="button button--ghost"
-              @click="toggleFavorite"
-            >
-              {{ isFavorite ? "♥ Favorited" : "♡ Add to favorites" }}
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <div class="artist-detail-layout">
-        <section class="artist-detail-panel">
-          <div class="artist-detail-panel__header">
-            <h2>Artist profile</h2>
-          </div>
-
-          <p class="artist-detail-panel__text">
-            {{ artist.notes }}
-          </p>
-        </section>
-
-        <section class="artist-detail-panel">
-          <div class="artist-detail-panel__header">
-            <h2>Quick facts</h2>
-          </div>
-
-          <div class="artist-facts-list">
-            <div class="artist-facts-list__item">
-              <span>Genres</span>
-              <strong>{{ artist.genres }}</strong>
-            </div>
-
-            <div class="artist-facts-list__item">
-              <span>Country</span>
-              <strong>{{ artist.country }}</strong>
-            </div>
-
-            <div class="artist-facts-list__item">
-              <span>Active since</span>
-              <strong>{{ artist.activeSince }}</strong>
-            </div>
-
-            <div class="artist-facts-list__item">
-              <span>Tracks in catalog</span>
-              <strong>{{ artist.tracksCount }}</strong>
-            </div>
-          </div>
-        </section>
+      <div v-if="errorMessage" class="artist-detail-panel">
+        <p class="auth-error">{{ errorMessage }}</p>
       </div>
 
-      <section class="artist-detail-panel artist-tracks-panel">
-        <div class="artist-detail-panel__header">
-          <h2>Tracks by this artist</h2>
-        </div>
+      <div v-else-if="isLoading" class="artist-detail-panel">
+        <p class="artist-detail-empty-state">Loading artist...</p>
+      </div>
 
-        <div v-if="artist.topTracks.length" class="artist-track-list">
-          <article
-            v-for="track in artist.topTracks"
-            :key="track.id"
-            class="artist-track-row"
+      <template v-else-if="artist">
+        <section class="artist-detail-hero">
+          <div
+            class="artist-detail-hero__cover"
+            :class="{ 'artist-detail-hero__cover--image': artist.imageUrl }"
+            :style="getArtistCoverStyle(artist)"
           >
-            <div class="artist-track-row__cover"></div>
+            <div v-if="!artist.imageUrl" class="artist-detail-hero__monogram">
+              {{ getArtistInitial(artist.name) }}
+            </div>
+          </div>
 
-            <div class="artist-track-row__main">
-              <h3>{{ track.title }}</h3>
-              <p>{{ track.category }}</p>
+          <div class="artist-detail-hero__content">
+            <p class="artist-detail-eyebrow">Artist profile</p>
+
+            <h1>{{ artist.name }}</h1>
+
+            <p class="artist-detail-description">
+              {{ artistProfileText }}
+            </p>
+
+            <div class="artist-detail-stats">
+              <span
+                >{{ tracksCount }} public
+                {{ tracksCount === 1 ? "track" : "tracks" }}</span
+              >
+              <span
+                >{{ categoriesCount }}
+                {{ categoriesCount === 1 ? "category" : "categories" }}</span
+              >
+              <span>Latest release: {{ latestReleaseLabel }}</span>
             </div>
 
-            <div class="artist-track-row__rating">
-              <span class="stars">★★★★★</span>
-              <span>{{ track.rating }}</span>
+            <div class="artist-detail-actions">
+              <RouterLink to="/tracks" class="button button--ghost">
+                Browse catalog
+              </RouterLink>
+            </div>
+          </div>
+        </section>
+
+        <div class="artist-detail-layout">
+          <section class="artist-detail-panel">
+            <div class="artist-detail-panel__header">
+              <h2>Artist profile</h2>
             </div>
 
-            <RouterLink
-              :to="`/tracks/${track.id}`"
-              class="button button--details button--sm"
+            <p class="artist-detail-panel__text">
+              {{ artistProfileText }}
+            </p>
+          </section>
+
+          <section class="artist-detail-panel">
+            <div class="artist-detail-panel__header">
+              <h2>Quick facts</h2>
+            </div>
+
+            <div class="artist-facts-list">
+              <div class="artist-facts-list__item">
+                <span>Name</span>
+                <strong>{{ artist.name }}</strong>
+              </div>
+
+              <div class="artist-facts-list__item">
+                <span>Tracks in catalog</span>
+                <strong>{{ tracksCount }}</strong>
+              </div>
+
+              <div class="artist-facts-list__item">
+                <span>Categories represented</span>
+                <strong>{{ categoriesCount }}</strong>
+              </div>
+
+              <div class="artist-facts-list__item">
+                <span>Latest release</span>
+                <strong>{{ latestReleaseLabel }}</strong>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <section class="artist-detail-panel artist-tracks-panel">
+          <div class="artist-detail-panel__header">
+            <h2>Tracks by this artist</h2>
+          </div>
+
+          <div v-if="artist.tracks.length" class="artist-track-list">
+            <article
+              v-for="track in artist.tracks"
+              :key="track.id"
+              class="artist-track-row"
             >
-              Details
-            </RouterLink>
-          </article>
-        </div>
+              <div
+                class="artist-track-row__cover"
+                :class="{ 'artist-track-row__cover--image': track.coverUrl }"
+                :style="getTrackCoverStyle(track)"
+              ></div>
 
-        <div v-else class="artist-detail-empty-state">
-          <p>No tracks available for this artist yet.</p>
-        </div>
-      </section>
+              <div class="artist-track-row__main">
+                <h3>{{ track.title }}</h3>
+                <p>{{ getTrackCategoryLabel(track) }}</p>
+              </div>
+
+              <div class="artist-track-row__rating">
+                <span>{{ formatDate(track.createdAt) }}</span>
+              </div>
+
+              <RouterLink
+                :to="{ name: 'track-detail', params: { id: track.id } }"
+                class="button button--details button--sm"
+              >
+                Details
+              </RouterLink>
+            </article>
+          </div>
+
+          <div v-else class="artist-detail-empty-box">
+            <p class="artist-detail-empty-state">
+              No public tracks are available for this artist yet.
+            </p>
+          </div>
+        </section>
+      </template>
     </div>
   </section>
 </template>
