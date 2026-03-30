@@ -3881,6 +3881,45 @@ img {
   margin-top: 16px;
 }
 
+.playlist-detail-layout {
+  align-items: start;
+}
+
+.playlist-detail-panel--info {
+  align-self: start;
+}
+
+.playlist-detail-panel--tracks {
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.playlist-track-list {
+  max-height: 980px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.playlist-track-list::-webkit-scrollbar {
+  width: 10px;
+}
+
+.playlist-track-list::-webkit-scrollbar-thumb {
+  background: rgba(139, 124, 246, 0.18);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+@media (max-width: 900px) {
+  .playlist-track-list {
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+  }
+}
+
 @media (max-width: 900px) {
   .admin-stats-grid,
   .admin-form__grid,

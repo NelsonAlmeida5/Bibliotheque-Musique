@@ -777,7 +777,7 @@ onBeforeUnmount(() => {
         </section>
 
         <div class="playlist-detail-layout">
-          <section class="playlist-detail-panel">
+          <section class="playlist-detail-panel playlist-detail-panel--info">
             <h2>Playlist info</h2>
 
             <div class="playlist-form">
@@ -803,7 +803,7 @@ onBeforeUnmount(() => {
             </div>
           </section>
 
-          <section class="playlist-detail-panel">
+          <section class="playlist-detail-panel playlist-detail-panel--tracks">
             <div class="playlist-detail-panel__header">
               <div class="playlist-detail-panel__title-group">
                 <h2>Tracks in this playlist</h2>
