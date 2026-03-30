@@ -3,8 +3,8 @@ import vine from '@vinejs/vine'
 export const createTrackValidator = vine.compile(
   vine.object({
     title: vine.string().minLength(2).maxLength(150),
-    embed_url: vine.string().maxLength(255),
-    cover_url: vine.string().maxLength(255).optional(),
+    embed_url: vine.string().maxLength(1000),
+    cover_url: vine.string().maxLength(1000).optional(),
     description: vine.string().maxLength(1000).optional(),
 
     artist_id: vine.number().withoutDecimals().positive().optional(),
@@ -18,8 +18,8 @@ export const createTrackValidator = vine.compile(
 export const updateTrackValidator = vine.compile(
   vine.object({
     title: vine.string().minLength(2).maxLength(150).optional(),
-    embed_url: vine.string().maxLength(255).optional(),
-    cover_url: vine.string().maxLength(255).optional(),
+    embed_url: vine.string().maxLength(1000).optional(),
+    cover_url: vine.string().maxLength(1000).optional(),
     description: vine.string().maxLength(1000).optional(),
 
     artist_id: vine.number().withoutDecimals().positive().optional(),

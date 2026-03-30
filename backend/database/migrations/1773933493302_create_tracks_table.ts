@@ -8,8 +8,8 @@ export default class extends BaseSchema {
       table.increments('id').notNullable()
 
       table.string('title', 150).notNullable()
-      table.string('embed_url', 255).notNullable()
-      table.string('cover_url', 255).nullable()
+      table.string('embed_url', 1000).notNullable()
+      table.string('cover_url', 1000).nullable()
       table.text('description').nullable()
 
       table.boolean('is_public').notNullable().defaultTo(true)
