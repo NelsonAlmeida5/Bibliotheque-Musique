@@ -1,91 +1,144 @@
 <script setup>
-const alphabet = [
-  'All', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L',
-  'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
-]
+import { computed, onMounted, ref } from "vue";
+import api from "../services/api";
 
-const artists = [
-  {
-    id: 1,
-    initials: 'AC',
-    name: 'Atrium Carceri',
-    genres: 'Dark Ambient · Atmospheric',
-    description:
-      'Swedish dark ambient project known for deeply cinematic and oppressive soundscapes built around immersive world-building.',
-    tracks: 24,
-    variant: 'sand',
-  },
-  {
-    id: 2,
-    initials: 'B',
-    name: 'Bauhaus',
-    genres: 'Gothic Rock · Post-Punk',
-    description:
-      'British post-punk pioneers widely credited as one of the founding acts of the gothic rock movement.',
-    tracks: 18,
-    variant: 'violet',
-  },
-  {
-    id: 3,
-    initials: 'C',
-    name: 'Coil',
-    genres: 'Post-Industrial · Experimental',
-    description:
-      'Groundbreaking English experimental group whose work ranged from industrial to ambient and ritual electronic sound.',
-    tracks: 31,
-    variant: 'sand',
-  },
-  {
-    id: 4,
-    initials: 'DCD',
-    name: 'Dead Can Dance',
-    genres: 'Neoclassical · Dark Folk',
-    description:
-      'Australian-British duo blending neoclassical composition with world music influences and haunting atmospheres.',
-    tracks: 22,
-    variant: 'blue',
-  },
-  {
-    id: 5,
-    initials: 'i',
-    name: 'ivri',
-    genres: 'Shoegaze · Dream Pop',
-    description:
-      'Independent shoegaze artist known for lush, layered soundscapes and emotionally charged melodies.',
-    tracks: 8,
-    variant: 'rose',
-  },
-  {
-    id: 6,
-    initials: 'L',
-    name: 'Lustmord',
-    genres: 'Dark Ambient · Industrial',
-    description:
-      'Pioneer of dark ambient music, Brian Williams has crafted some of the genre’s most oppressive and iconic works.',
-    tracks: 19,
-    variant: 'green',
-  },
-  {
-    id: 7,
-    initials: 'M',
-    name: 'Mortiis',
-    genres: 'Dark Ambient · Dungeon Synth',
-    description:
-      'Norwegian project by Håvard Ellefsen, blending dungeon synth with elaborate dark atmospheres and fantasy textures.',
-    tracks: 27,
-    variant: 'violet',
-  },
-  {
-    id: 8,
-    initials: 'Z',
-    name: 'Zola Jesus',
-    genres: 'Darkwave · Neoclassical',
-    description:
-      'American singer-songwriter Nika Roza Danilova creates powerful darkwave and art pop with dramatic vocal presence.',
-    tracks: 14,
-    variant: 'blue',
-  },
-]
+const alphabet = [
+  "All",
+  "A",
+  "B",
+  "C",
+  "D",
+  "E",
+  "F",
+  "G",
+  "H",
+  "I",
+  "J",
+  "K",
+  "L",
+  "M",
+  "N",
+  "O",
+  "P",
+  "Q",
+  "R",
+  "S",
+  "T",
+  "U",
+  "V",
+  "W",
+  "X",
+  "Y",
+  "Z",
+];
+
+const artists = ref([]);
+const searchQuery = ref("");
+const selectedLetter = ref("All");
+
+const isLoading = ref(true);
+const errorMessage = ref("");
+
+function extractCollection(payload) {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  return [];
+}
+
+function normalize(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase();
+}
+
+function normalizeArtist(item) {
+  return {
+    id: item.id,
+    name: item.name ?? "Unknown artist",
+    description: item.description ?? "",
+    imageUrl: item.imageUrl ?? item.image_url ?? "",
+  };
+}
+
+function getArtistInitials(name) {
+  const parts = String(name || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (!parts.length) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 1).toUpperCase();
+
+  return (parts[0][0] + parts[1][0]).toUpperCase();
+}
+
+function getArtistDescription(artist) {
+  if (artist.description?.trim()) return artist.description;
+
+  return "No description available for this artist yet.";
+}
+
+function getArtistCoverStyle(artist) {
+  if (!artist.imageUrl) return {};
+
+  return {
+    backgroundImage: `linear-gradient(135deg, rgba(127, 120, 226, 0.18), rgba(98, 51, 129, 0.34)), url("${artist.imageUrl}")`,
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+  };
+}
+
+function clearFilters() {
+  searchQuery.value = "";
+  selectedLetter.value = "All";
+}
+
+const filteredArtists = computed(() => {
+  let result = [...artists.value];
+
+  const search = normalize(searchQuery.value);
+
+  if (search) {
+    result = result.filter((artist) => {
+      return (
+        normalize(artist.name).includes(search) ||
+        normalize(artist.description).includes(search)
+      );
+    });
+  }
+
+  if (selectedLetter.value !== "All") {
+    result = result.filter((artist) =>
+      normalize(artist.name).startsWith(selectedLetter.value.toLowerCase()),
+    );
+  }
+
+  result.sort((a, b) => a.name.localeCompare(b.name));
+
+  return result;
+});
+
+async function loadArtists() {
+  isLoading.value = true;
+  errorMessage.value = "";
+
+  try {
+    const response = await api.get("/artists", {
+      params: { page: 1, limit: 100 },
+    });
+
+    artists.value = extractCollection(response.data).map(normalizeArtist);
+  } catch (error) {
+    errorMessage.value =
+      error?.response?.data?.message || "Unable to load artists right now.";
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+onMounted(() => {
+  loadArtists();
+});
 </script>
 
 <template>
@@ -94,11 +147,15 @@ const artists = [
       <div class="container artists-topbar__inner">
         <div class="artists-heading">
           <h1>Artists</h1>
-          <p>318 artists</p>
+          <p>
+            {{ filteredArtists.length }}
+            {{ filteredArtists.length === 1 ? "artist" : "artists" }}
+          </p>
         </div>
 
         <div class="artists-search-wrap">
           <input
+            v-model="searchQuery"
             type="text"
             class="artists-search"
             placeholder="Search an artist..."
@@ -118,54 +175,68 @@ const artists = [
               :key="letter"
               type="button"
               class="artists-alpha-button"
-              :class="{ 'is-active': letter === 'All' }"
+              :class="{ 'is-active': letter === selectedLetter }"
+              @click="selectedLetter = letter"
             >
               {{ letter }}
             </button>
           </div>
         </div>
 
-        <div class="artists-grid">
-          <article
-            v-for="artist in artists"
-            :key="artist.id"
-            class="artist-card"
-          >
-            <div
-              class="artist-card__cover"
-              :class="`artist-card__cover--${artist.variant}`"
-            >
-              <div class="artist-card__badge">{{ artist.initials }}</div>
-              <button type="button" class="artist-card__favorite">♡</button>
-            </div>
+        <p v-if="errorMessage" class="auth-error">{{ errorMessage }}</p>
 
-            <div class="artist-card__body">
-              <h3 class="artist-card__name">{{ artist.name }}</h3>
-              <p class="artist-card__genres">{{ artist.genres }}</p>
-              <p class="artist-card__description">{{ artist.description }}</p>
-
-              <div class="artist-card__footer">
-                <span class="artist-card__tracks">{{ artist.tracks }} tracks</span>
-
-                <RouterLink
-                  :to="`/artists/${artist.id}`"
-                  class="button button--details button--sm"
-                >
-                  Details
-                </RouterLink>
-              </div>
-            </div>
-          </article>
+        <div v-if="isLoading" class="artists-empty-state">
+          <p>Loading artists...</p>
         </div>
 
-        <div class="artists-pagination">
-          <button type="button" class="catalog-page-btn">‹</button>
-          <button type="button" class="catalog-page-btn is-active">1</button>
-          <button type="button" class="catalog-page-btn">2</button>
-          <button type="button" class="catalog-page-btn">3</button>
-          <button type="button" class="catalog-page-btn">…</button>
-          <button type="button" class="catalog-page-btn">12</button>
-          <button type="button" class="catalog-page-btn">›</button>
+        <template v-else-if="filteredArtists.length">
+          <div class="artists-grid">
+            <article
+              v-for="artist in filteredArtists"
+              :key="artist.id"
+              class="artist-card"
+            >
+              <div
+                class="artist-card__cover"
+                :class="{ 'artist-card__cover--placeholder': !artist.imageUrl }"
+                :style="getArtistCoverStyle(artist)"
+              >
+                <div class="artist-card__badge">
+                  {{ getArtistInitials(artist.name) }}
+                </div>
+              </div>
+
+              <div class="artist-card__body">
+                <h3 class="artist-card__name">{{ artist.name }}</h3>
+                <p class="artist-card__genres">Catalog artist</p>
+                <p class="artist-card__description">
+                  {{ getArtistDescription(artist) }}
+                </p>
+
+                <div class="artist-card__footer">
+                  <span class="artist-card__tracks">Public profile</span>
+
+                  <RouterLink
+                    :to="{ name: 'artist-detail', params: { id: artist.id } }"
+                    class="button button--details button--sm"
+                  >
+                    Details
+                  </RouterLink>
+                </div>
+              </div>
+            </article>
+          </div>
+        </template>
+
+        <div v-else class="artists-empty-state">
+          <p>No artists match your current filters.</p>
+          <button
+            type="button"
+            class="button button--secondary"
+            @click="clearFilters"
+          >
+            Reset filters
+          </button>
         </div>
       </div>
     </section>
