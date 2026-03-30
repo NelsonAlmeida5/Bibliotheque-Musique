@@ -3319,6 +3319,16 @@ img {
   color: var(--light-gray);
 }
 
+.favorite-artist-card__cover,
+.favorite-track-card__cover {
+  background-repeat: no-repeat;
+}
+
+.favorite-artist-card__cover {
+  background-size: cover;
+  background-position: center;
+}
+
 @media (max-width: 1000px) {
   .track-detail-hero,
   .track-detail-layout {
