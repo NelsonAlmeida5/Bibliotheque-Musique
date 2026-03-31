@@ -1,12 +1,15 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 import api from "../services/api";
 
+const router = useRouter();
 const sortOptions = ["Most recent", "Artist A–Z", "Title A–Z"];
 
 const tracks = ref([]);
 const categoryNames = ref([]);
 const favoriteTrackIds = ref([]);
+const viewMode = ref("grid");
 
 const searchQuery = ref("");
 const artistQuery = ref("");
@@ -45,6 +48,13 @@ function getApiErrorMessage(error, fallbackMessage) {
 }
 
 function normalizeTrack(track) {
+  const ratings = Array.isArray(track.ratings) ? track.ratings : [];
+  const ratingsCount = ratings.length;
+  const averageRating = ratingsCount
+    ? ratings.reduce((sum, rating) => sum + Number(rating.rating || 0), 0) /
+      ratingsCount
+    : 0;
+
   return {
     id: track.id,
     title: track.title ?? "",
@@ -58,11 +68,28 @@ function normalizeTrack(track) {
       track.customArtistName ?? track.custom_artist_name ?? null,
     customCategoryName:
       track.customCategoryName ?? track.custom_category_name ?? null,
+    averageRating: Number(averageRating.toFixed(1)),
+    ratingsCount,
   };
 }
 
 function normalizeFavoriteTrack(item) {
   return item.track?.id ?? item.trackId ?? item.track_id ?? null;
+}
+
+function getStars(value) {
+  const rating = Math.max(0, Math.min(5, Number(value) || 0));
+  const fullStars = Math.round(rating);
+  return "★".repeat(fullStars) + "☆".repeat(5 - fullStars);
+}
+
+function formatAverageRating(value) {
+  if (!Number.isFinite(value) || value <= 0) return "—";
+  return value.toFixed(1);
+}
+
+function navigateToTrack(trackId) {
+  router.push({ name: "track-detail", params: { id: trackId } });
 }
 
 function getTrackArtistLabel(track) {
@@ -278,14 +305,19 @@ onMounted(() => {
         </div>
 
         <div class="catalog-view-toggle" aria-label="View mode">
-          <button type="button" class="catalog-view-toggle__button is-active">
+          <button
+            type="button"
+            class="catalog-view-toggle__button"
+            :class="{ 'is-active': viewMode === 'grid' }"
+            @click="viewMode = 'grid'"
+          >
             ▦ Grid
           </button>
           <button
             type="button"
             class="catalog-view-toggle__button"
-            disabled
-            title="List mode not implemented yet"
+            :class="{ 'is-active': viewMode === 'list' }"
+            @click="viewMode = 'list'"
           >
             ☰ List
           </button>
@@ -384,63 +416,111 @@ onMounted(() => {
             <p>Loading public tracks...</p>
           </div>
 
-          <div v-else-if="filteredTracks.length" class="catalog-grid">
-            <article
-              v-for="track in filteredTracks"
-              :key="track.id"
-              class="catalog-card"
-            >
-              <div
-                class="catalog-card__cover"
-                :style="getTrackCoverStyle(track)"
+          <div v-else-if="filteredTracks.length">
+            <div v-if="viewMode === 'grid'" class="catalog-grid">
+              <article
+                v-for="track in filteredTracks"
+                :key="track.id"
+                class="catalog-card"
+                @click="navigateToTrack(track.id)"
               >
+                <div
+                  class="catalog-card__cover"
+                  :style="getTrackCoverStyle(track)"
+                >
+                  <button
+                    type="button"
+                    class="favorite-card__heart catalog-card__favorite"
+                    :class="{ 'is-active': isTrackFavorite(track.id) }"
+                    :title="
+                      isTrackFavorite(track.id)
+                        ? 'Remove from favorites'
+                        : 'Add to favorites'
+                    "
+                    @click.stop="toggleFavoriteTrack(track)"
+                  >
+                    {{ isTrackFavorite(track.id) ? "♥" : "♡" }}
+                  </button>
+                </div>
+
+                <div class="catalog-card__body">
+                  <p class="catalog-card__category">
+                    {{ getTrackCategoryLabel(track) }}
+                  </p>
+
+                  <h3 class="catalog-card__title" :title="track.title">
+                    {{ track.title }}
+                  </h3>
+
+                  <p class="catalog-card__artist">
+                    {{ getTrackArtistLabel(track) }}
+                  </p>
+
+                  <div class="catalog-card__footer">
+                    <span class="catalog-card__date">
+                      {{ formatTrackDate(track.createdAt) }}
+                    </span>
+
+                    <div class="catalog-card__rating">
+                      <span class="stars">{{
+                        getStars(track.averageRating)
+                      }}</span>
+                      <span>{{
+                        formatAverageRating(track.averageRating)
+                      }}</span>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            </div>
+
+            <div v-else class="catalog-list">
+              <article
+                v-for="track in filteredTracks"
+                :key="track.id"
+                class="catalog-list-row"
+                @click="navigateToTrack(track.id)"
+              >
+                <div
+                  class="catalog-list-row__cover"
+                  :style="getTrackCoverStyle(track)"
+                ></div>
+
+                <div class="catalog-list-row__track">
+                  <div>
+                    <h3 class="catalog-list-row__title" :title="track.title">
+                      {{ track.title }}
+                    </h3>
+                    <p class="catalog-list-row__artist">
+                      {{ getTrackArtistLabel(track) }}
+                    </p>
+                  </div>
+                </div>
+
+                <div class="catalog-list-row__category">
+                  {{ getTrackCategoryLabel(track) }}
+                </div>
+
+                <div class="catalog-list-row__rating">
+                  <span class="stars">{{ getStars(track.averageRating) }}</span>
+                  <span>{{ formatAverageRating(track.averageRating) }}</span>
+                </div>
+
                 <button
                   type="button"
-                  class="favorite-card__heart catalog-card__favorite"
+                  class="favorite-card__heart catalog-card__favorite catalog-list-row__favorite"
                   :class="{ 'is-active': isTrackFavorite(track.id) }"
                   :title="
                     isTrackFavorite(track.id)
                       ? 'Remove from favorites'
                       : 'Add to favorites'
                   "
-                  @click="toggleFavoriteTrack(track)"
+                  @click.stop="toggleFavoriteTrack(track)"
                 >
                   {{ isTrackFavorite(track.id) ? "♥" : "♡" }}
                 </button>
-
-                <RouterLink
-                  :to="{ name: 'track-detail', params: { id: track.id } }"
-                  class="catalog-card__play"
-                >
-                  ▶
-                </RouterLink>
-              </div>
-
-              <div class="catalog-card__body">
-                <p class="catalog-card__category">
-                  {{ getTrackCategoryLabel(track) }}
-                </p>
-
-                <h3 class="catalog-card__title">{{ track.title }}</h3>
-
-                <p class="catalog-card__artist">
-                  {{ getTrackArtistLabel(track) }}
-                </p>
-
-                <div class="catalog-card__footer">
-                  <div class="catalog-card__rating">
-                    <span>{{ formatTrackDate(track.createdAt) }}</span>
-                  </div>
-
-                  <RouterLink
-                    :to="{ name: 'track-detail', params: { id: track.id } }"
-                    class="button button--details button--sm"
-                  >
-                    Details →
-                  </RouterLink>
-                </div>
-              </div>
-            </article>
+              </article>
+            </div>
           </div>
 
           <div v-else class="catalog-empty-state">

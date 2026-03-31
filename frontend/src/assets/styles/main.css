@@ -347,12 +347,26 @@ img {
 .highlight-row {
   display: grid;
   grid-template-columns:
-    50px minmax(0, 1.8fr) minmax(120px, 0.8fr) minmax(110px, 0.65fr)
+    50px minmax(0, 1.8fr) minmax(140px, 0.9fr) minmax(160px, 1fr)
     auto;
   align-items: center;
   gap: 20px;
-  padding: 20px 0;
-  border-bottom: 1px solid var(--border);
+  padding: 20px 20px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  margin-bottom: 14px;
+  background: var(--surface-1);
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    background-color 0.18s ease;
+  cursor: pointer;
+}
+
+.highlight-row:hover {
+  transform: translateY(-2px);
+  border-color: rgba(139, 124, 246, 0.35);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .highlight-row__index {
@@ -629,6 +643,97 @@ img {
   border: 1px solid var(--border);
   background: var(--surface-1);
   overflow: hidden;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease;
+  cursor: pointer;
+}
+
+.catalog-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(139, 124, 246, 0.35);
+}
+
+.catalog-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.catalog-list-row {
+  display: grid;
+  grid-template-columns:
+    72px minmax(0, 2.2fr) minmax(140px, 1fr) minmax(120px, 1fr)
+    54px;
+  gap: 20px;
+  align-items: center;
+  padding: 18px 18px;
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease;
+  cursor: pointer;
+}
+
+.catalog-list-row:hover {
+  transform: translateY(-2px);
+  border-color: rgba(139, 124, 246, 0.35);
+}
+
+.catalog-list-row__cover {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+  border: 1px solid var(--border);
+}
+
+.catalog-list-row__track {
+  min-width: 0;
+}
+
+.catalog-list-row__title,
+.catalog-card__title {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.catalog-card__date {
+  color: var(--warm-gray);
+  font-size: 0.92rem;
+}
+
+.catalog-list-row__artist {
+  margin: 6px 0 0;
+  color: var(--warm-gray);
+  font-size: 0.95rem;
+}
+
+.catalog-list-row__category {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.78rem;
+  color: var(--theme);
+}
+
+.catalog-list-row__rating {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: Arial, Helvetica, sans-serif;
+  color: var(--warm-gray);
+}
+
+.catalog-list-row__favorite {
+  width: 38px;
+  height: 38px;
+  justify-self: end;
+  align-self: center;
 }
 
 .catalog-card__cover {

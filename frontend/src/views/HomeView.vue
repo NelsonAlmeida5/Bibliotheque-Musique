@@ -1,6 +1,9 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 import api from "../services/api";
+
+const router = useRouter();
 
 const stats = ref({
   tracks: 0,
@@ -81,6 +84,10 @@ function getHighlightCoverStyle(track) {
 
 function isTrackFavorite(trackId) {
   return favoriteTrackIds.value.includes(Number(trackId));
+}
+
+function navigateToTrack(trackId) {
+  router.push({ name: "track-detail", params: { id: trackId } });
 }
 
 async function loadFavoriteTracks() {
@@ -232,6 +239,7 @@ onMounted(() => {
             v-for="(track, index) in highlights"
             :key="track.id"
             class="highlight-row"
+            @click="navigateToTrack(track.id)"
           >
             <div class="highlight-row__index">{{ formatIndex(index) }}</div>
 
@@ -264,17 +272,10 @@ onMounted(() => {
                     ? 'Remove from favorites'
                     : 'Add to favorites'
                 "
-                @click="toggleFavoriteTrack(track)"
+                @click.stop="toggleFavoriteTrack(track)"
               >
                 {{ isTrackFavorite(track.id) ? "♥" : "♡" }}
               </button>
-
-              <RouterLink
-                :to="{ name: 'track-detail', params: { id: track.id } }"
-                class="button button--details button--sm"
-              >
-                Details →
-              </RouterLink>
             </div>
           </article>
         </div>

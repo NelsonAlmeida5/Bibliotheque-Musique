@@ -18,6 +18,7 @@ export default class TracksController {
       .preload('artist')
       .preload('category')
       .preload('user')
+      .preload('ratings')
       .orderBy('created_at', 'desc')
 
     if (search) {
