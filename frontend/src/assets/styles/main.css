@@ -1921,7 +1921,7 @@ img {
 .favorite-track-card {
   border: 1px solid var(--border);
   background: var(--surface-1);
-  border-radius: px;
+  border-radius: 0px;
   overflow: hidden;
 }
 
@@ -2086,7 +2086,7 @@ img {
 
 .track-detail-hero__cover {
   min-height: 380px;
-  border-radius: px;
+  border-radius: 0px;
   background-size: cover;
   background-position: center;
   border: 1px solid var(--border);
@@ -2186,7 +2186,7 @@ img {
   position: relative;
   width: 100%;
   padding-top: 56.25%;
-  border-radius: px;
+  border-radius: 0px;
   overflow: hidden;
   border: 1px solid var(--border);
   background: #0f1014;
@@ -2239,7 +2239,7 @@ img {
 
 .track-comment-card {
   border: 1px solid var(--border);
-  border-radius: px;
+  border-radius: 0px;
   padding: 16px 18px;
   background: rgba(255, 255, 255, 0.02);
 }
