@@ -209,7 +209,7 @@ img {
   color: var(--ink);
 }
 
-/* Home hero */
+/* HomeView */
 
 .home-hero {
   position: relative;
@@ -313,7 +313,7 @@ img {
   color: rgba(248, 245, 241, 0.45);
 }
 
-/* Highlights */
+/* HomeView — Highlights */
 
 .home-highlights {
   padding: 110px 0 130px;
@@ -434,7 +434,9 @@ img {
   color: var(--theme);
 }
 
-/* Catalog */
+/* End HomeView */
+
+/* CatalogView */
 
 .catalog-page {
   padding-bottom: 150px;
@@ -702,7 +704,9 @@ img {
   font-size: 0.92rem;
 }
 
-/* Artists */
+/* End CatalogView */
+
+/* ArtistsView */
 
 .artists-page {
   padding-bottom: 150px;
@@ -897,6 +901,8 @@ img {
   font-size: 0.88rem;
 }
 
+/* End ArtistsView */
+
 /* Footer */
 
 .site-footer {
@@ -964,7 +970,9 @@ img {
   color: rgba(250, 248, 244, 0.4);
 }
 
-/* Auth */
+/* End Footer */
+
+/* Auth / Login / Register View */
 
 .auth-page {
   padding: 88px 0 150px;
@@ -1079,7 +1087,9 @@ img {
   line-height: 1.5;
 }
 
-/* My Playlists */
+/* End Auth / Login / Register View */
+
+/* MyPlaylistsView */
 
 .my-playlists-page {
   padding-bottom: 150px;
@@ -1266,7 +1276,9 @@ img {
   color: var(--light-gray);
 }
 
-/* Playlist Detail */
+/* End MyPlaylistsView */
+
+/* PlaylistDetailView */
 
 .playlist-detail-page {
   padding: 56px 0 150px;
@@ -1515,7 +1527,9 @@ img {
   gap: 6px;
 }
 
-/* My Tracks */
+/* End PlaylistDetailView */
+
+/* MyTracksView */
 
 .my-tracks-page {
   padding-bottom: 150px;
@@ -1807,9 +1821,9 @@ img {
   background: var(--surface-2);
 }
 
-/* Responsive */
+/* End MyTracksView */
 
-/* Favorites */
+/* FavoritesView */
 
 .favorites-page {
   padding-bottom: 150px;
@@ -2044,7 +2058,9 @@ img {
   margin: 0 0 16px;
 }
 
-/* Track Detail */
+/* End FavoritesView */
+
+/* TrackDetailView */
 
 .track-detail-page {
   padding: 56px 0 150px;
@@ -2254,7 +2270,9 @@ img {
   color: var(--warm-gray);
 }
 
-/* Admin */
+/* End TrackDetailView */
+
+/* AdminView */
 
 .admin-page {
   padding-bottom: 150px;
@@ -2624,7 +2642,9 @@ img {
   line-height: 1.6;
 }
 
-/* Artist Detail */
+/* End AdminView */
+
+/* ArtistDetailView */
 
 .artist-detail-page {
   padding: 56px 0 150px;
