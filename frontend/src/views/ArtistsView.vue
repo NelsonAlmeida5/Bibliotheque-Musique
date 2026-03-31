@@ -309,7 +309,7 @@ onMounted(() => {
                     :to="{ name: 'artist-detail', params: { id: artist.id } }"
                     class="button button--details button--sm"
                   >
-                    Details
+                    Details →
                   </RouterLink>
                 </div>
               </div>

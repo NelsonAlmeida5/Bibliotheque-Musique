@@ -361,7 +361,7 @@ onMounted(() => {
                 >
                   <button
                     type="button"
-                    class="favorite-card__heart"
+                    class="favorite-card__heart is-active"
                     @click="removeFavoriteTrack(track.id, track.title)"
                     title="Remove from favorites"
                   >
@@ -440,7 +440,7 @@ onMounted(() => {
                 >
                   <button
                     type="button"
-                    class="favorite-card__heart"
+                    class="favorite-card__heart is-active"
                     @click="removeFavoriteArtist(artist.id, artist.name)"
                     title="Remove from favorites"
                   >

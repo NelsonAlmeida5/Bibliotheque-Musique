@@ -422,16 +422,24 @@ img {
   width: 38px;
   height: 38px;
   border-radius: 999px;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--warm-gray);
+  border: 1px solid rgba(243, 239, 232, 0.16);
+  background: rgba(20, 20, 24, 0.4);
+  color: #ff92b0;
+  display: grid;
+  place-items: center;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .icon-button:hover {
-  background: var(--surface-1);
-  color: var(--theme);
+  background: rgba(20, 20, 24, 0.55);
+  color: #ff92b0;
+}
+
+.icon-button.is-active {
+  background: rgba(30, 18, 24, 0.75);
+  border-color: rgba(255, 146, 176, 0.32);
+  color: #ff92b0;
 }
 
 /* End HomeView */

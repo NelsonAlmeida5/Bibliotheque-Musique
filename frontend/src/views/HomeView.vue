@@ -256,8 +256,9 @@ onMounted(() => {
 
             <div class="highlight-row__actions">
               <button
-                class="icon-button"
                 type="button"
+                class="icon-button"
+                :class="{ 'is-active': isTrackFavorite(track.id) }"
                 :title="
                   isTrackFavorite(track.id)
                     ? 'Remove from favorites'
