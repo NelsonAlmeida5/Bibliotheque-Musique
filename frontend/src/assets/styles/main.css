@@ -3954,6 +3954,17 @@ img {
   border-color: var(--theme);
 }
 
+.track-detail-hero__content {
+  min-width: 0;
+}
+
+.track-detail-hero__content h1 {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
+}
+
 @media (max-width: 700px) {
   .favorites-topbar__controls {
     width: 100%;
