@@ -10,6 +10,7 @@ const FavoriteArtistsController = () => import('#controllers/favorite_artists_co
 const MyPlaylistsController = () => import('#controllers/my_playlists_controller')
 const CommentsController = () => import('#controllers/comments_controller')
 const RatingsController = () => import('#controllers/ratings_controller')
+const HomeController = () => import('#controllers/home_controller')
 
 /*
 |--------------------------------------------------------------------------
@@ -19,6 +20,8 @@ const RatingsController = () => import('#controllers/ratings_controller')
 router.get('/', async () => {
   return { message: 'API Bibliotheque Musique is running' }
 })
+
+router.get('/home', [HomeController, 'index'])
 
 router.post('/register', [AuthController, 'register'])
 router.post('/login', [AuthController, 'login'])

@@ -908,7 +908,6 @@ img {
 
 .artist-card__name {
   margin: 0;
-  font-family: "Playfair Display", Georgia, serif;
   font-size: 1.55rem;
   line-height: 1.05;
   font-weight: 500;
@@ -1996,7 +1995,7 @@ img {
   align-items: center;
   border: 1px solid var(--border);
   background: var(--surface-1);
-  border-radius: 14px;
+  border-radius: 0px;
   overflow: hidden;
 }
 
@@ -3028,7 +3027,7 @@ img {
 
 .artist-detail-hero__content h1 {
   margin: 0;
-  font-family: "Playfair Display", Georgia, serif;
+
   font-size: clamp(2.8rem, 5vw, 4.4rem);
   line-height: 0.95;
   font-weight: 600;
@@ -3774,6 +3773,20 @@ img {
   top: 12px;
   right: 12px;
   z-index: 2;
+}
+
+.home-loading-panel {
+  border: 1px dashed var(--border);
+  padding: 28px 24px;
+  text-align: center;
+  color: var(--warm-gray);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.highlight-cover {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 @media (max-width: 700px) {
