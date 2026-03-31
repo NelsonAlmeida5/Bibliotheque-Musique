@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from "vue";
 import api from "../services/api";
 
 const activeTab = ref("all");
+const searchQuery = ref("");
 
 const favoriteTracks = ref([]);
 const favoriteArtists = ref([]);
@@ -54,6 +55,7 @@ function normalizeFavoriteTrack(item) {
       track.custom_category_name ??
       "Uncategorized",
     coverUrl: track.coverUrl ?? track.cover_url ?? "",
+    description: track.description ?? "",
   };
 }
 
@@ -103,12 +105,94 @@ function getArtistFooterLabel(artist) {
   return "Saved artist";
 }
 
-/* -------------------- Counts -------------------- */
-const favoriteTracksCount = computed(() => favoriteTracks.value.length);
-const favoriteArtistsCount = computed(() => favoriteArtists.value.length);
-const totalFavorites = computed(
-  () => favoriteTracks.value.length + favoriteArtists.value.length,
+/* -------------------- Search -------------------- */
+const searchPlaceholder = computed(() => {
+  if (activeTab.value === "tracks") return "Search favorite tracks...";
+  if (activeTab.value === "artists") return "Search favorite artists...";
+  return "Search favorites...";
+});
+
+const filteredFavoriteTracks = computed(() => {
+  const search = normalize(searchQuery.value);
+  if (!search) return favoriteTracks.value;
+
+  return favoriteTracks.value.filter((track) => {
+    return (
+      normalize(track.title).includes(search) ||
+      normalize(track.artist).includes(search) ||
+      normalize(track.category).includes(search) ||
+      normalize(track.description).includes(search)
+    );
+  });
+});
+
+const filteredFavoriteArtists = computed(() => {
+  const search = normalize(searchQuery.value);
+  if (!search) return favoriteArtists.value;
+
+  return favoriteArtists.value.filter((artist) => {
+    return (
+      normalize(artist.name).includes(search) ||
+      normalize(artist.description).includes(search)
+    );
+  });
+});
+
+const hasSearch = computed(() => !!searchQuery.value.trim());
+
+const visibleTrackCount = computed(() => filteredFavoriteTracks.value.length);
+const visibleArtistCount = computed(() => filteredFavoriteArtists.value.length);
+const visibleTotalCount = computed(
+  () => visibleTrackCount.value + visibleArtistCount.value,
 );
+
+const topbarSummary = computed(() => {
+  if (!hasSearch.value) {
+    return `${favoriteTracks.value.length + favoriteArtists.value.length} favorites · ${favoriteTracks.value.length} tracks · ${favoriteArtists.value.length} artists`;
+  }
+
+  if (activeTab.value === "tracks") {
+    return `${visibleTrackCount.value} matching ${visibleTrackCount.value === 1 ? "track" : "tracks"}`;
+  }
+
+  if (activeTab.value === "artists") {
+    return `${visibleArtistCount.value} matching ${visibleArtistCount.value === 1 ? "artist" : "artists"}`;
+  }
+
+  return `${visibleTotalCount.value} matching favorites · ${visibleTrackCount.value} tracks · ${visibleArtistCount.value} artists`;
+});
+
+const showTracksSection = computed(() => {
+  if (activeTab.value === "tracks") return true;
+  if (activeTab.value === "all") {
+    if (!hasSearch.value) return true;
+    return visibleTrackCount.value > 0;
+  }
+  return false;
+});
+
+const showArtistsSection = computed(() => {
+  if (activeTab.value === "artists") return true;
+  if (activeTab.value === "all") {
+    if (!hasSearch.value) return true;
+    return visibleArtistCount.value > 0;
+  }
+  return false;
+});
+
+const showGlobalEmptySearchState = computed(() => {
+  if (!hasSearch.value) return false;
+
+  if (activeTab.value === "tracks") {
+    return visibleTrackCount.value === 0;
+  }
+
+  if (activeTab.value === "artists") {
+    return visibleArtistCount.value === 0;
+  }
+
+  return visibleTotalCount.value === 0;
+});
 
 /* -------------------- Loaders -------------------- */
 async function loadFavorites() {
@@ -190,39 +274,45 @@ onMounted(() => {
       <div class="container favorites-topbar__inner">
         <div class="favorites-heading">
           <h1>Favorites</h1>
-          <p>
-            {{ totalFavorites }} favorites · {{ favoriteTracksCount }} tracks ·
-            {{ favoriteArtistsCount }} artists
-          </p>
+          <p>{{ topbarSummary }}</p>
         </div>
 
-        <div class="favorites-tabs">
-          <button
-            type="button"
-            class="favorites-tabs__button"
-            :class="{ 'is-active': activeTab === 'all' }"
-            @click="activeTab = 'all'"
-          >
-            All
-          </button>
+        <div class="favorites-topbar__controls">
+          <input
+            v-model="searchQuery"
+            type="text"
+            class="favorites-search"
+            :placeholder="searchPlaceholder"
+          />
 
-          <button
-            type="button"
-            class="favorites-tabs__button"
-            :class="{ 'is-active': activeTab === 'tracks' }"
-            @click="activeTab = 'tracks'"
-          >
-            Tracks
-          </button>
+          <div class="favorites-tabs">
+            <button
+              type="button"
+              class="favorites-tabs__button"
+              :class="{ 'is-active': activeTab === 'all' }"
+              @click="activeTab = 'all'"
+            >
+              All
+            </button>
 
-          <button
-            type="button"
-            class="favorites-tabs__button"
-            :class="{ 'is-active': activeTab === 'artists' }"
-            @click="activeTab = 'artists'"
-          >
-            Artists
-          </button>
+            <button
+              type="button"
+              class="favorites-tabs__button"
+              :class="{ 'is-active': activeTab === 'tracks' }"
+              @click="activeTab = 'tracks'"
+            >
+              Tracks
+            </button>
+
+            <button
+              type="button"
+              class="favorites-tabs__button"
+              :class="{ 'is-active': activeTab === 'artists' }"
+              @click="activeTab = 'artists'"
+            >
+              Artists
+            </button>
+          </div>
         </div>
       </div>
     </section>
@@ -237,8 +327,12 @@ onMounted(() => {
         </div>
 
         <template v-else>
+          <div v-if="showGlobalEmptySearchState" class="favorites-empty-state">
+            <p>No favorites match your current search.</p>
+          </div>
+
           <section
-            v-if="activeTab === 'all' || activeTab === 'tracks'"
+            v-if="showTracksSection && !showGlobalEmptySearchState"
             class="favorites-section"
           >
             <div class="favorites-section__header">
@@ -248,13 +342,16 @@ onMounted(() => {
               </div>
 
               <span class="favorites-section__count">
-                {{ favoriteTracksCount }}
+                {{ visibleTrackCount }}
               </span>
             </div>
 
-            <div v-if="favoriteTracks.length" class="favorite-track-grid">
+            <div
+              v-if="filteredFavoriteTracks.length"
+              class="favorite-track-grid"
+            >
               <article
-                v-for="track in favoriteTracks"
+                v-for="track in filteredFavoriteTracks"
                 :key="track.id"
                 class="favorite-track-card"
               >
@@ -295,6 +392,13 @@ onMounted(() => {
               </article>
             </div>
 
+            <div
+              v-else-if="activeTab === 'tracks'"
+              class="favorites-empty-state"
+            >
+              <p>No favorite tracks match your search.</p>
+            </div>
+
             <div v-else class="favorites-empty-state">
               <p>No favorite tracks yet.</p>
               <RouterLink
@@ -307,7 +411,7 @@ onMounted(() => {
           </section>
 
           <section
-            v-if="activeTab === 'all' || activeTab === 'artists'"
+            v-if="showArtistsSection && !showGlobalEmptySearchState"
             class="favorites-section"
           >
             <div class="favorites-section__header">
@@ -317,13 +421,16 @@ onMounted(() => {
               </div>
 
               <span class="favorites-section__count">
-                {{ favoriteArtistsCount }}
+                {{ visibleArtistCount }}
               </span>
             </div>
 
-            <div v-if="favoriteArtists.length" class="favorite-artist-grid">
+            <div
+              v-if="filteredFavoriteArtists.length"
+              class="favorite-artist-grid"
+            >
               <article
-                v-for="artist in favoriteArtists"
+                v-for="artist in filteredFavoriteArtists"
                 :key="artist.id"
                 class="favorite-artist-card"
               >
@@ -360,6 +467,13 @@ onMounted(() => {
                   </div>
                 </div>
               </article>
+            </div>
+
+            <div
+              v-else-if="activeTab === 'artists'"
+              class="favorites-empty-state"
+            >
+              <p>No favorite artists match your search.</p>
             </div>
 
             <div v-else class="favorites-empty-state">
