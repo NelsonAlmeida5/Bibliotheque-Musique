@@ -1899,63 +1899,7 @@ img {
   background: var(--surface-2);
 }
 
-.track-form__hint {
-  margin: -4px 0 0;
-  color: var(--light-gray);
-  font-size: 0.88rem;
-  line-height: 1.6;
-}
-
 /* Responsive */
-
-@media (max-width: 1100px) {
-  .home-hero__inner {
-    grid-template-columns: 1fr;
-  }
-
-  .home-hero__visual {
-    min-height: 340px;
-  }
-
-  .hero-mic {
-    left: 50%;
-    transform: translateX(-50%) rotate(8deg);
-  }
-}
-
-@media (max-width: 900px) {
-  .navbar {
-    padding: 16px 0;
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .navbar__left,
-  .navbar__right {
-    flex-wrap: wrap;
-    gap: 16px;
-  }
-
-  .home-stats {
-    grid-template-columns: repeat(2, max-content);
-    gap: 24px 36px;
-  }
-
-  .highlight-row {
-    grid-template-columns: 50px 1fr;
-    gap: 14px;
-  }
-
-  .highlight-row__category,
-  .highlight-row__rating,
-  .highlight-row__actions {
-    grid-column: 2 / -1;
-  }
-
-  .footer {
-    grid-template-columns: 1fr 1fr;
-  }
-}
 
 /* Favorites */
 
@@ -2868,87 +2812,6 @@ img {
   line-height: 1.6;
 }
 
-@media (max-width: 700px) {
-  .my-track-player-panel__top {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-}
-
-@media (max-width: 640px) {
-  .container {
-    width: min(var(--container), calc(100% - 28px));
-  }
-
-  .navbar__nav {
-    gap: 16px;
-  }
-
-  .home-hero__actions {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .home-stats {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .footer {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 1100px) {
-  .catalog-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .catalog-sidebar {
-    position: static;
-  }
-
-  .catalog-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 700px) {
-  .catalog-topbar__inner {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .catalog-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 1200px) {
-  .artists-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 900px) {
-  .artists-topbar__inner {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .artists-search-wrap {
-    max-width: 100%;
-  }
-
-  .artists-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .artists-alpha-filter {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-}
-
 /* Artist Detail */
 
 .artist-detail-page {
@@ -3537,22 +3400,6 @@ img {
   background-position: center;
 }
 
-.playlist-track-row__main {
-  min-width: 0;
-}
-
-.playlist-track-row__main h3 {
-  margin: 0;
-  font-size: 1.05rem;
-  font-weight: 500;
-}
-
-.playlist-track-row__main p {
-  margin: 6px 0 0;
-  color: var(--warm-gray);
-  font-size: 0.92rem;
-}
-
 .playlist-track-row__category {
   color: var(--light-gray);
   font-size: 0.88rem;
@@ -3789,23 +3636,6 @@ img {
   background-repeat: no-repeat;
 }
 
-@media (max-width: 700px) {
-  .my-track-toolbar {
-    width: 100%;
-    align-items: stretch;
-  }
-
-  .my-track-search {
-    width: 100%;
-  }
-
-  .my-track-list-wrap {
-    max-height: none;
-    overflow: visible;
-    padding-right: 0;
-  }
-}
-
 .admin-stats-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
@@ -3963,6 +3793,174 @@ img {
   overflow-wrap: anywhere;
   word-break: break-word;
   hyphens: auto;
+}
+
+.catalog-view-toggle__button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.catalog-card__play {
+  text-decoration: none;
+}
+
+.catalog-empty-state {
+  border: 1px dashed var(--border);
+  padding: 34px 24px;
+  text-align: center;
+  color: var(--warm-gray);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.catalog-empty-state p {
+  margin: 0 0 16px;
+}
+
+@media (max-width: 1100px) {
+  .home-hero__inner {
+    grid-template-columns: 1fr;
+  }
+
+  .home-hero__visual {
+    min-height: 340px;
+  }
+
+  .hero-mic {
+    left: 50%;
+    transform: translateX(-50%) rotate(8deg);
+  }
+}
+
+@media (max-width: 900px) {
+  .navbar {
+    padding: 16px 0;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .navbar__left,
+  .navbar__right {
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .home-stats {
+    grid-template-columns: repeat(2, max-content);
+    gap: 24px 36px;
+  }
+
+  .highlight-row {
+    grid-template-columns: 50px 1fr;
+    gap: 14px;
+  }
+
+  .highlight-row__category,
+  .highlight-row__rating,
+  .highlight-row__actions {
+    grid-column: 2 / -1;
+  }
+
+  .footer {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .my-track-player-panel__top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    width: min(var(--container), calc(100% - 28px));
+  }
+
+  .navbar__nav {
+    gap: 16px;
+  }
+
+  .home-hero__actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .home-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .footer {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1100px) {
+  .catalog-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .catalog-sidebar {
+    position: static;
+  }
+
+  .catalog-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .catalog-topbar__inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .catalog-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1200px) {
+  .artists-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .artists-topbar__inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .artists-search-wrap {
+    max-width: 100%;
+  }
+
+  .artists-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .artists-alpha-filter {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 700px) {
+  .my-track-toolbar {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .my-track-search {
+    width: 100%;
+  }
+
+  .my-track-list-wrap {
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+  }
 }
 
 @media (max-width: 700px) {
@@ -4144,27 +4142,6 @@ img {
   .my-track-player-panel {
     padding: 16px;
   }
-}
-
-.catalog-view-toggle__button:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.catalog-card__play {
-  text-decoration: none;
-}
-
-.catalog-empty-state {
-  border: 1px dashed var(--border);
-  padding: 34px 24px;
-  text-align: center;
-  color: var(--warm-gray);
-  background: rgba(255, 255, 255, 0.02);
-}
-
-.catalog-empty-state p {
-  margin: 0 0 16px;
 }
 
 @media (max-width: 1100px) {
