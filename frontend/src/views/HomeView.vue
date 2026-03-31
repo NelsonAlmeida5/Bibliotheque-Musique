@@ -172,7 +172,7 @@ onMounted(() => {
           </h1>
 
           <p class="home-hero__text">
-            A carefully curated library across all genres — dark, atmospheric,
+            A carefully curated library across all genres — atmospheric,
             emotional, and everything in between.
           </p>
 
