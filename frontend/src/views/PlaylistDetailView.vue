@@ -609,6 +609,21 @@ function goBack() {
   router.push({ name: "my-playlists" });
 }
 
+function openTrackDestination(track) {
+  if (track.source === "public") {
+    router.push({
+      name: "track-detail",
+      params: { id: track.id },
+    });
+    return;
+  }
+
+  router.push({
+    path: "/my-tracks",
+    query: { highlight: String(track.id) },
+  });
+}
+
 async function saveChanges() {
   clearFeedback();
 
@@ -884,7 +899,14 @@ onBeforeUnmount(() => {
                 :key="track.id"
                 class="playlist-track-card"
               >
-                <div class="playlist-track-row">
+                <div
+                  class="playlist-track-row playlist-track-row--link"
+                  role="link"
+                  tabindex="0"
+                  @click="openTrackDestination(track)"
+                  @keydown.enter.prevent="openTrackDestination(track)"
+                  @keydown.space.prevent="openTrackDestination(track)"
+                >
                   <div
                     class="playlist-track-row__cover"
                     :style="getCoverStyle(track.coverUrl)"
@@ -900,41 +922,33 @@ onBeforeUnmount(() => {
                   </div>
 
                   <div class="playlist-track-row__actions">
-                    <RouterLink
-                      v-if="track.source === 'public'"
-                      :to="{ name: 'track-detail', params: { id: track.id } }"
-                      class="button button--details button--sm"
-                    >
-                      Details
-                    </RouterLink>
-
-                    <RouterLink
-                      v-else
-                      :to="{
-                        path: '/my-tracks',
-                        query: { highlight: String(track.id) },
-                      }"
-                      class="button button--details button--sm"
-                    >
-                      My Tracks
-                    </RouterLink>
-
                     <button
                       type="button"
-                      class="button button--secondary button--sm"
-                      @click="togglePlayerPanel(track)"
+                      class="playlist-track-row__player"
+                      :class="{ 'is-active': isPlayerOpen(track.id) }"
+                      :title="
+                        isPlayerOpen(track.id)
+                          ? 'Hide media player'
+                          : 'Open media player'
+                      "
+                      :aria-label="
+                        isPlayerOpen(track.id)
+                          ? 'Hide media player'
+                          : 'Open media player'
+                      "
+                      @click.stop="togglePlayerPanel(track)"
                     >
-                      {{
-                        isPlayerOpen(track.id) ? "Hide player" : "Media player"
-                      }}
+                      <span class="playlist-track-row__player-icon">▶</span>
                     </button>
 
                     <button
                       type="button"
-                      class="button button--ghost button--sm"
-                      @click="removeTrack(track.id)"
+                      class="playlist-track-row__remove"
+                      title="Remove track"
+                      aria-label="Remove track"
+                      @click.stop="removeTrack(track.id)"
                     >
-                      Remove
+                      🗑
                     </button>
                   </div>
                 </div>
