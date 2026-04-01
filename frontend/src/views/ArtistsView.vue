@@ -1,6 +1,9 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 import api from "../services/api";
+
+const router = useRouter();
 
 const alphabet = [
   "All",
@@ -82,18 +85,6 @@ function normalizeFavoriteArtist(item) {
   return item.artist?.id ?? item.artistId ?? item.artist_id ?? null;
 }
 
-function getArtistInitials(name) {
-  const parts = String(name || "")
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean);
-
-  if (!parts.length) return "?";
-  if (parts.length === 1) return parts[0].slice(0, 1).toUpperCase();
-
-  return (parts[0][0] + parts[1][0]).toUpperCase();
-}
-
 function getArtistDescription(artist) {
   if (artist.description?.trim()) return artist.description;
   return "No description available for this artist yet.";
@@ -116,6 +107,13 @@ function clearFilters() {
 
 function isArtistFavorite(artistId) {
   return favoriteArtistIds.value.includes(Number(artistId));
+}
+
+function goToArtistDetail(artistId) {
+  router.push({
+    name: "artist-detail",
+    params: { id: artistId },
+  });
 }
 
 const filteredArtists = computed(() => {
@@ -269,7 +267,12 @@ onMounted(() => {
             <article
               v-for="artist in filteredArtists"
               :key="artist.id"
-              class="artist-card"
+              class="artist-card artist-card--link"
+              role="link"
+              tabindex="0"
+              @click="goToArtistDetail(artist.id)"
+              @keydown.enter.prevent="goToArtistDetail(artist.id)"
+              @keydown.space.prevent="goToArtistDetail(artist.id)"
             >
               <div
                 class="artist-card__cover"
@@ -285,33 +288,17 @@ onMounted(() => {
                       ? 'Remove from favorites'
                       : 'Add to favorites'
                   "
-                  @click="toggleFavoriteArtist(artist)"
+                  @click.stop.prevent="toggleFavoriteArtist(artist)"
                 >
                   {{ isArtistFavorite(artist.id) ? "♥" : "♡" }}
                 </button>
-
-                <div class="artist-card__badge">
-                  {{ getArtistInitials(artist.name) }}
-                </div>
               </div>
 
               <div class="artist-card__body">
                 <h3 class="artist-card__name">{{ artist.name }}</h3>
-                <p class="artist-card__genres">Catalog artist</p>
                 <p class="artist-card__description">
                   {{ getArtistDescription(artist) }}
                 </p>
-
-                <div class="artist-card__footer">
-                  <span class="artist-card__tracks">Public profile</span>
-
-                  <RouterLink
-                    :to="{ name: 'artist-detail', params: { id: artist.id } }"
-                    class="button button--details button--sm"
-                  >
-                    Details →
-                  </RouterLink>
-                </div>
               </div>
             </article>
           </div>
