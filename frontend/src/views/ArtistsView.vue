@@ -78,6 +78,12 @@ function normalizeArtist(item) {
     name: item.name ?? "Unknown artist",
     description: item.description ?? "",
     imageUrl: item.imageUrl ?? item.image_url ?? "",
+    categoriesRepresented: {
+      count: Number(item.categoriesRepresented?.count ?? 0),
+      names: Array.isArray(item.categoriesRepresented?.names)
+        ? item.categoriesRepresented.names
+        : [],
+    },
   };
 }
 
@@ -85,9 +91,11 @@ function normalizeFavoriteArtist(item) {
   return item.artist?.id ?? item.artistId ?? item.artist_id ?? null;
 }
 
-function getArtistDescription(artist) {
-  if (artist.description?.trim()) return artist.description;
-  return "No description available for this artist yet.";
+function getArtistCategoriesText(artist) {
+  const names = artist?.categoriesRepresented?.names ?? [];
+
+  if (!names.length) return "No categories yet";
+  return names.join(", ");
 }
 
 function getArtistCoverStyle(artist) {
@@ -125,7 +133,8 @@ const filteredArtists = computed(() => {
     result = result.filter((artist) => {
       return (
         normalize(artist.name).includes(search) ||
-        normalize(artist.description).includes(search)
+        normalize(artist.description).includes(search) ||
+        normalize(getArtistCategoriesText(artist)).includes(search)
       );
     });
   }
@@ -296,8 +305,8 @@ onMounted(() => {
 
               <div class="artist-card__body">
                 <h3 class="artist-card__name">{{ artist.name }}</h3>
-                <p class="artist-card__description">
-                  {{ getArtistDescription(artist) }}
+                <p class="artist-card__categories">
+                  {{ getArtistCategoriesText(artist) }}
                 </p>
               </div>
             </article>

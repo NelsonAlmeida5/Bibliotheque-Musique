@@ -48,6 +48,19 @@ function getApiErrorMessage(error, fallbackMessage) {
   );
 }
 
+function normalizeTrackLink(item) {
+  if (!item?.id) return null;
+
+  return {
+    id: item.id,
+    title: item.title ?? "Untitled track",
+    favoriteCount: Number(item.favoriteCount ?? 0),
+    averageRating: Number(item.averageRating ?? 0),
+    ratingsCount: Number(item.ratingsCount ?? 0),
+    weightedRating: Number(item.weightedRating ?? 0),
+  };
+}
+
 function normalizeArtist(item) {
   return {
     id: item.id,
@@ -69,6 +82,16 @@ function normalizeArtist(item) {
             : null,
         }))
       : [],
+    latestTrackInCatalog: normalizeTrackLink(item.latestTrackInCatalog),
+    categoriesRepresented: {
+      count: Number(item.categoriesRepresented?.count ?? 0),
+      names: Array.isArray(item.categoriesRepresented?.names)
+        ? item.categoriesRepresented.names
+        : [],
+    },
+    artistFavoritesCount: Number(item.artistFavoritesCount ?? 0),
+    mostFavoritedTrack: normalizeTrackLink(item.mostFavoritedTrack),
+    highestRatedTrack: normalizeTrackLink(item.highestRatedTrack),
   };
 }
 
@@ -97,55 +120,14 @@ function getArtistCoverStyle(artistValue) {
   };
 }
 
-function getTrackCoverStyle(track) {
-  if (!track?.coverUrl) return {};
-
-  return {
-    backgroundImage: `linear-gradient(135deg, rgba(127, 120, 226, 0.18), rgba(98, 51, 129, 0.34)), url("${track.coverUrl}")`,
-    backgroundSize: "cover",
-    backgroundPosition: "center",
-  };
-}
-
-function getTrackCategoryLabel(track) {
-  return track?.category?.name || "Uncategorized";
-}
-
-function formatDate(dateValue) {
-  if (!dateValue) return "Unknown date";
-
-  const date = new Date(dateValue);
-  if (Number.isNaN(date.getTime())) return "Unknown date";
-
-  return date.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
-
 const tracksCount = computed(() => artist.value?.tracks?.length ?? 0);
 
-const categoriesCount = computed(() => {
-  if (!artist.value?.tracks?.length) return 0;
-
-  const uniqueNames = new Set(
-    artist.value.tracks.map((track) => getTrackCategoryLabel(track)),
-  );
-
-  return uniqueNames.size;
-});
-
-const latestReleaseLabel = computed(() => {
-  const latest = artist.value?.tracks?.[0];
-  if (!latest?.createdAt) return "No release date";
-
-  return formatDate(latest.createdAt);
+const artistCategoryNames = computed(() => {
+  return artist.value?.categoriesRepresented?.names ?? [];
 });
 
 const artistProfileText = computed(() => {
   if (artist.value?.description?.trim()) return artist.value.description;
-
   return "No description is available for this artist yet.";
 });
 
@@ -259,24 +241,27 @@ watch(
           </div>
 
           <div class="artist-detail-hero__content">
-            <p class="artist-detail-eyebrow">Artist profile</p>
-
             <h1>{{ artist.name }}</h1>
 
-            <p class="artist-detail-description">
-              {{ artistProfileText }}
-            </p>
-
             <div class="artist-detail-stats">
+              <span>
+                {{ tracksCount }} catalog
+                {{ tracksCount === 1 ? "track" : "tracks" }}
+              </span>
+            </div>
+
+            <div
+              v-if="artistCategoryNames.length"
+              class="artist-detail-categories"
+            >
               <span
-                >{{ tracksCount }} public
-                {{ tracksCount === 1 ? "track" : "tracks" }}</span
+                v-for="(categoryName, index) in artistCategoryNames"
+                :key="`${categoryName}-${index}`"
+                class="artist-detail-category-tag"
               >
-              <span
-                >{{ categoriesCount }}
-                {{ categoriesCount === 1 ? "category" : "categories" }}</span
-              >
-              <span>Latest release: {{ latestReleaseLabel }}</span>
+                {{ categoryName
+                }}<span v-if="index < artistCategoryNames.length - 1">,</span>
+              </span>
             </div>
 
             <p v-if="actionError" class="auth-error artist-detail-feedback">
@@ -316,7 +301,7 @@ watch(
         </section>
 
         <div class="artist-detail-layout">
-          <section class="artist-detail-panel">
+          <section class="artist-detail-panel artist-detail-panel--facts">
             <div class="artist-detail-panel__header">
               <h2>Artist profile</h2>
             </div>
@@ -333,69 +318,63 @@ watch(
 
             <div class="artist-facts-list">
               <div class="artist-facts-list__item">
-                <span>Name</span>
-                <strong>{{ artist.name }}</strong>
+                <span>Latest track in catalog</span>
+
+                <RouterLink
+                  v-if="artist.latestTrackInCatalog"
+                  :to="{
+                    name: 'track-detail',
+                    params: { id: artist.latestTrackInCatalog.id },
+                  }"
+                  class="artist-fact-link"
+                >
+                  {{ artist.latestTrackInCatalog.title }}
+                </RouterLink>
+
+                <strong v-else>—</strong>
               </div>
 
               <div class="artist-facts-list__item">
-                <span>Tracks in catalog</span>
-                <strong>{{ tracksCount }}</strong>
+                <span>Artist favorites</span>
+                <strong>{{ artist.artistFavoritesCount }}</strong>
               </div>
 
               <div class="artist-facts-list__item">
-                <span>Categories represented</span>
-                <strong>{{ categoriesCount }}</strong>
+                <span>Most favorited track</span>
+
+                <RouterLink
+                  v-if="artist.mostFavoritedTrack"
+                  :to="{
+                    name: 'track-detail',
+                    params: { id: artist.mostFavoritedTrack.id },
+                  }"
+                  class="artist-fact-link"
+                >
+                  {{ artist.mostFavoritedTrack.title }}
+                </RouterLink>
+
+                <strong v-else>No favorites yet</strong>
               </div>
 
               <div class="artist-facts-list__item">
-                <span>Latest release</span>
-                <strong>{{ latestReleaseLabel }}</strong>
+                <span>Highest rated track</span>
+
+                <RouterLink
+                  v-if="artist.highestRatedTrack"
+                  :to="{
+                    name: 'track-detail',
+                    params: { id: artist.highestRatedTrack.id },
+                  }"
+                  class="artist-fact-link"
+                >
+                  {{ artist.highestRatedTrack.title }}
+                </RouterLink>
+
+                <strong v-else>Not enough ratings yet</strong>
               </div>
             </div>
           </section>
         </div>
-
-        <section class="artist-detail-panel artist-tracks-panel">
-          <div class="artist-detail-panel__header">
-            <h2>Tracks by this artist</h2>
-          </div>
-
-          <div v-if="artist.tracks.length" class="artist-track-list">
-            <article
-              v-for="track in artist.tracks"
-              :key="track.id"
-              class="artist-track-row"
-            >
-              <div
-                class="artist-track-row__cover"
-                :class="{ 'artist-track-row__cover--image': track.coverUrl }"
-                :style="getTrackCoverStyle(track)"
-              ></div>
-
-              <div class="artist-track-row__main">
-                <h3>{{ track.title }}</h3>
-                <p>{{ getTrackCategoryLabel(track) }}</p>
-              </div>
-
-              <div class="artist-track-row__rating">
-                <span>{{ formatDate(track.createdAt) }}</span>
-              </div>
-
-              <RouterLink
-                :to="{ name: 'track-detail', params: { id: track.id } }"
-                class="button button--details button--sm"
-              >
-                Details
-              </RouterLink>
-            </article>
-          </div>
-
-          <div v-else class="artist-detail-empty-box">
-            <p class="artist-detail-empty-state">
-              No public tracks are available for this artist yet.
-            </p>
-          </div>
-        </section>
       </template>
     </div>
   </section>
