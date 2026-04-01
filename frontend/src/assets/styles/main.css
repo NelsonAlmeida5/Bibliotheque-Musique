@@ -1097,25 +1097,16 @@ img {
 }
 
 .artist-detail-panel--facts {
-  padding-top: 18px;
-  padding-bottom: 18px;
+  padding-top: 20px;
+  padding-bottom: 28px;
 }
 
 .artist-detail-panel--facts .artist-detail-panel__header {
-  margin-bottom: 6px;
-}
-
-.artist-detail-panel--facts .artist-facts-list__item {
-  padding: 10px 0;
-}
-
-.artist-detail-panel--facts .artist-facts-list__item:first-child {
-  padding-top: 4px;
+  margin-bottom: 10px;
 }
 
 .artist-detail-panel--facts .artist-facts-list__item:last-child {
-  padding-bottom: 0;
-  border-bottom: none;
+  padding-bottom: 6px;
 }
 
 /* End ArtistsView */

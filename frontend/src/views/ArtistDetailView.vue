@@ -311,7 +311,7 @@ watch(
             </p>
           </section>
 
-          <section class="artist-detail-panel">
+          <section class="artist-detail-panel artist-detail-panel--facts">
             <div class="artist-detail-panel__header">
               <h2>Quick facts</h2>
             </div>
