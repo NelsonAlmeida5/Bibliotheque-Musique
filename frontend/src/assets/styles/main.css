@@ -1371,21 +1371,6 @@ img {
   grid-template-rows: 1fr 1fr;
 }
 
-.playlist-card__cover-grid span {
-  border-right: 1px solid rgba(255, 255, 255, 0.16);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
-}
-
-.playlist-card__cover-grid span:nth-child(2),
-.playlist-card__cover-grid span:nth-child(4) {
-  border-right: none;
-}
-
-.playlist-card__cover-grid span:nth-child(3),
-.playlist-card__cover-grid span:nth-child(4) {
-  border-bottom: none;
-}
-
 .playlist-card__actions {
   position: absolute;
   top: 12px;
@@ -3638,7 +3623,7 @@ img {
   inset: 0;
   display: grid;
   gap: 1px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .playlist-card__cover-grid--0,
@@ -3670,22 +3655,61 @@ img {
   display: block;
   min-width: 0;
   min-height: 0;
-  background:
-    linear-gradient(
-      135deg,
-      rgba(139, 124, 246, 0.14),
-      rgba(255, 255, 255, 0.03)
-    ),
-    linear-gradient(180deg, #806f53, #27241f);
+  background-color: #171927;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
 }
 
 .playlist-card__tile--placeholder {
-  background:
-    linear-gradient(135deg, rgba(30, 0, 255, 0.1), rgba(255, 255, 255, 0.02)),
-    linear-gradient(180deg, #9b896a, #27241f);
+  background-image: linear-gradient(
+    145deg,
+    #1d1d1d 0%,
+    #473a66 24%,
+    #1c465a 46%,
+    #2a2744 70%,
+    #171927 100%
+  );
+}
+
+.playlist-card__tile--placeholder:nth-child(1) {
+  background-image: linear-gradient(
+    125deg,
+    #1d1d1d 0%,
+    #441934 26%,
+    #1c465a 52%,
+    #4c1c5f 100%
+  );
+}
+
+.playlist-card__tile--placeholder:nth-child(2) {
+  background-image: linear-gradient(
+    125deg,
+    #1d1d1d 0%,
+    #391d50 26%,
+    #552322 50%,
+    #181d55 100%
+  );
+}
+
+.playlist-card__tile--placeholder:nth-child(3) {
+  background-image: linear-gradient(
+    125deg,
+    #1d1d1d 0%,
+    #5e0d45 24%,
+    #401d70 50%,
+    #181c33 100%
+  );
+}
+
+.playlist-card__tile--placeholder:nth-child(4) {
+  background-image: linear-gradient(
+    125deg,
+    #3d0000 0%,
+    #500000 24%,
+    #220353 48%,
+    #0d1569 100%
+  );
 }
 
 .playlist-card__actions {
