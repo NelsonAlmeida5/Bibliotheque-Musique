@@ -304,9 +304,7 @@ async function loadAuthData() {
         (playlist) => String(playlist.id) === selectedPlaylistId.value,
       )
     ) {
-      selectedPlaylistId.value = playlists.value[0]
-        ? String(playlists.value[0].id)
-        : "";
+      selectedPlaylistId.value = "";
     }
   } finally {
     isAuthLoading.value = false;
@@ -567,26 +565,27 @@ watch(
 
                 <button
                   type="button"
-                  class="button button--primary"
+                  class="button button--ghost"
                   :disabled="
                     isSubmittingPlaylist ||
                     !isAuthenticated ||
-                    !playlists.length
+                    !playlists.length ||
+                    !selectedPlaylistId
                   "
                   @click="addToPlaylist"
                 >
                   {{ isSubmittingPlaylist ? "Adding..." : "Add to playlist" }}
                 </button>
-              </div>
 
-              <button
-                type="button"
-                class="button button--ghost"
-                :disabled="isSubmittingFavorite || !isAuthenticated"
-                @click="toggleFavorite"
-              >
-                {{ isFavorite ? "♥ Favorited" : "♡ Add to favorites" }}
-              </button>
+                <button
+                  type="button"
+                  class="button button--ghost"
+                  :disabled="isSubmittingFavorite || !isAuthenticated"
+                  @click="toggleFavorite"
+                >
+                  {{ isFavorite ? "♥ Favorited" : "♡ Add to favorites" }}
+                </button>
+              </div>
             </div>
 
             <p v-if="!isAuthenticated" class="track-detail-login-hint">

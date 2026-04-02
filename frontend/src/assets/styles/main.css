@@ -1873,9 +1873,9 @@ img {
 
 .my-track-card {
   display: grid;
-  grid-template-columns: 124px minmax(0, 1fr);
-  gap: 18px;
-  align-items: start;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 0;
+  align-items: stretch;
   border: 1px solid var(--border);
   border-radius: 0px;
   overflow: hidden;
@@ -1884,9 +1884,9 @@ img {
 
 .my-track-card__cover {
   position: relative;
-  aspect-ratio: 1 / 1;
-  min-height: 0;
-  align-self: start;
+  min-height: 120px;
+  height: 100%;
+  align-self: stretch;
   background:
     linear-gradient(
       135deg,
@@ -1911,7 +1911,7 @@ img {
 
 .my-track-card__body {
   min-width: 0;
-  padding: 16px 16px 14px 0;
+  padding: 16px;
 }
 
 .my-track-card__top {
@@ -3187,10 +3187,12 @@ img {
   flex-wrap: wrap;
   gap: 12px;
   align-items: center;
+  width: 100%;
 }
 
 .track-detail-select {
-  min-width: 220px;
+  min-width: 260px;
+  flex: 1 1 320px;
   height: 46px;
   border: 1px solid var(--border);
   background: var(--bg);
@@ -4294,11 +4296,6 @@ img {
   .track-comment-form__footer {
     flex-direction: column;
     align-items: stretch;
-  }
-
-  .track-detail-select {
-    min-width: 0;
-    width: 100%;
   }
 
   .track-comment-card__top {
