@@ -3836,54 +3836,28 @@ img {
 }
 
 .playlist-card__tile--placeholder {
-  background-image: linear-gradient(
-    145deg,
-    #1d1d1d 0%,
-    #473a66 24%,
-    #1c465a 46%,
-    #2a2744 70%,
-    #171927 100%
-  );
+  background-image: linear-gradient(145deg, #92617d 0%, #49d595 100%);
 }
 
 .playlist-card__tile--placeholder:nth-child(1) {
-  background-image: linear-gradient(
-    125deg,
-    #1d1d1d 0%,
-    #441934 26%,
-    #1c465a 52%,
-    #4c1c5f 100%
-  );
+  background-image: linear-gradient(135deg, #92617d 0%, #3daf7c 100%);
 }
 
 .playlist-card__tile--placeholder:nth-child(2) {
-  background-image: linear-gradient(
-    125deg,
-    #1d1d1d 0%,
-    #391d50 26%,
-    #552322 50%,
-    #181d55 100%
-  );
+  background-image: linear-gradient(315deg, #7f4bf2 0%, #cf7841 100%);
 }
 
 .playlist-card__tile--placeholder:nth-child(3) {
   background-image: linear-gradient(
-    125deg,
-    #1d1d1d 0%,
-    #5e0d45 24%,
-    #401d70 50%,
-    #181c33 100%
+    45deg,
+    #cbb496 0%,
+    #688ab6 50%,
+    #7d55a8 100%
   );
 }
 
 .playlist-card__tile--placeholder:nth-child(4) {
-  background-image: linear-gradient(
-    125deg,
-    #3d0000 0%,
-    #500000 24%,
-    #220353 48%,
-    #0d1569 100%
-  );
+  background-image: linear-gradient(225deg, #7181bc 0%, #a72b52 100%);
 }
 
 .playlist-card__actions {
