@@ -110,7 +110,7 @@ function getCoverStyle(url) {
   if (!url) return {};
 
   return {
-    backgroundImage: `linear-gradient(135deg, rgba(127, 120, 226, 0.18), rgba(98, 51, 129, 0.34)), url("${url}")`,
+    backgroundImage: `url("${url}")`,
     backgroundSize: "cover",
     backgroundPosition: "center",
   };

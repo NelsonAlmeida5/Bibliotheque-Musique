@@ -114,7 +114,7 @@ function getArtistCoverStyle(artistValue) {
   if (!artistValue?.imageUrl) return {};
 
   return {
-    backgroundImage: `linear-gradient(135deg, rgba(127, 120, 226, 0.18), rgba(98, 51, 129, 0.34)), url("${artistValue.imageUrl}")`,
+    backgroundImage: `url("${artistValue.imageUrl}")`,
     backgroundSize: "cover",
     backgroundPosition: "center",
   };
