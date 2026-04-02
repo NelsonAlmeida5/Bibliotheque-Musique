@@ -362,19 +362,6 @@ onMounted(() => {
           </div>
 
           <div class="catalog-filter-block">
-            <label class="catalog-filter-label" for="artist-filter"
-              >Artist</label
-            >
-            <input
-              id="artist-filter"
-              v-model="artistQuery"
-              type="text"
-              class="catalog-input"
-              placeholder="Filter by artist..."
-            />
-          </div>
-
-          <div class="catalog-filter-block">
             <label class="catalog-filter-label" for="sort-by">Sort by</label>
             <select id="sort-by" v-model="selectedSort" class="catalog-select">
               <option
