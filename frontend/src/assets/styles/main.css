@@ -1461,10 +1461,11 @@ img {
 
 .playlist-create-card strong {
   font-size: 1.1rem;
+  margin-top: 10px;
 }
 
 .playlist-create-card span {
-  margin-top: 0px;
+  margin-top: 4px;
   font-size: 0.92rem;
   color: var(--light-gray);
 }
