@@ -33,7 +33,7 @@ export default class extends BaseSeeder {
       { title: 'Ritual' },
       {
         title: 'Ritual',
-        embedUrl: 'https://www.youtube.com/watch?v=example1',
+        embedUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
         coverUrl: 'https://example.com/ritual.jpg',
         description: 'A second darkwave track',
         artistId: twinTribes.id,
@@ -46,7 +46,7 @@ export default class extends BaseSeeder {
       { title: 'Kasvetli Kutlama' },
       {
         title: 'Kasvetli Kutlama',
-        embedUrl: 'https://www.youtube.com/watch?v=example2',
+        embedUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
         coverUrl: 'https://example.com/kasvetli.jpg',
         description: 'Dark and hypnotic post-punk atmosphere',
         artistId: shePastAway.id,
@@ -59,7 +59,7 @@ export default class extends BaseSeeder {
       { title: 'Sudno' },
       {
         title: 'Sudno',
-        embedUrl: 'https://www.youtube.com/watch?v=example3',
+        embedUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
         coverUrl: 'https://example.com/sudno.jpg',
         description: 'Cold post-punk track',
         artistId: molchatDoma.id,
