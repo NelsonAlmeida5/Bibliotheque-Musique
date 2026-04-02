@@ -96,7 +96,7 @@ export default class TracksController {
       customArtistName: data.custom_artist_name ?? null,
       customCategoryName: data.custom_category_name ?? null,
       userId: user.id,
-      isPublic: user.role === 'admin' ? (data.is_public ?? true) : false,
+      isPublic: user.role === 'admin' ? (data.is_public ?? false) : false,
     })
 
     await track.load('artist')
