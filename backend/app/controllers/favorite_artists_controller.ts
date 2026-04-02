@@ -3,16 +3,53 @@ import { favoriteArtistValidator } from '#validators/favorite'
 import FavoriteArtist from '#models/favorite_artist'
 import Artist from '#models/artist'
 
+function buildFavoriteArtistPayload(favorite: FavoriteArtist) {
+  const favoriteData = favorite.serialize()
+  const artistModel = favorite.artist
+
+  if (!artistModel) {
+    return {
+      ...favoriteData,
+      artist: null,
+    }
+  }
+
+  const artistData = artistModel.serialize()
+
+  const categoryNames = Array.from(
+    new Set(
+      (artistModel.tracks ?? [])
+        .map((track) => track.category?.name?.trim())
+        .filter((name) => Boolean(name))
+    )
+  ) as string[]
+
+  return {
+    ...favoriteData,
+    artist: {
+      ...artistData,
+      categoriesRepresented: {
+        count: categoryNames.length,
+        names: categoryNames,
+      },
+    },
+  }
+}
+
 export default class FavoriteArtistsController {
   async index({ auth }: HttpContext) {
     const user = auth.getUserOrFail()
 
     const favorites = await FavoriteArtist.query()
       .where('user_id', user.id)
-      .preload('artist')
+      .preload('artist', (artistQuery) => {
+        artistQuery.preload('tracks', (tracksQuery) => {
+          tracksQuery.where('is_public', true).preload('category').orderBy('created_at', 'desc')
+        })
+      })
       .orderBy('created_at', 'desc')
 
-    return favorites
+    return favorites.map((favorite) => buildFavoriteArtistPayload(favorite))
   }
 
   async store({ request, auth, response }: HttpContext) {
@@ -35,9 +72,16 @@ export default class FavoriteArtistsController {
       artistId: artistId,
     })
 
-    await favorite.load('artist')
+    const createdFavorite = await FavoriteArtist.query()
+      .where('id', favorite.id)
+      .preload('artist', (artistQuery) => {
+        artistQuery.preload('tracks', (tracksQuery) => {
+          tracksQuery.where('is_public', true).preload('category').orderBy('created_at', 'desc')
+        })
+      })
+      .firstOrFail()
 
-    return response.created(favorite)
+    return response.created(buildFavoriteArtistPayload(createdFavorite))
   }
 
   async destroy({ params, auth, response }: HttpContext) {

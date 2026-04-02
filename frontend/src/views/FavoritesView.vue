@@ -1,6 +1,9 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 import api from "../services/api";
+
+const router = useRouter();
 
 const activeTab = ref("all");
 const searchQuery = ref("");
@@ -73,12 +76,27 @@ function getTrackCoverStyle(track) {
 function normalizeFavoriteArtist(item) {
   const artist = item.artist ?? item;
 
+  const fallbackCategoryNames = Array.isArray(artist.tracks)
+    ? Array.from(
+        new Set(
+          artist.tracks
+            .map((track) => track.category?.name?.trim())
+            .filter(Boolean),
+        ),
+      )
+    : [];
+
+  const categoryNames = Array.isArray(artist.categoriesRepresented?.names)
+    ? artist.categoriesRepresented.names
+    : fallbackCategoryNames;
+
   return {
     id: artist.id ?? item.artistId ?? item.artist_id ?? item.id,
     name: artist.name ?? "Unknown artist",
     imageUrl: artist.imageUrl ?? artist.image_url ?? "",
-    description: artist.description ?? "",
-    tracksCount: Array.isArray(artist.tracks) ? artist.tracks.length : null,
+    categoriesRepresented: {
+      names: categoryNames,
+    },
   };
 }
 
@@ -92,17 +110,10 @@ function getArtistCoverStyle(artist) {
   };
 }
 
-function getArtistDescription(artist) {
-  if (artist.description?.trim()) return artist.description;
-  return "No description available for this artist yet.";
-}
-
-function getArtistFooterLabel(artist) {
-  if (artist.tracksCount !== null) {
-    return `${artist.tracksCount} ${artist.tracksCount === 1 ? "track" : "tracks"}`;
-  }
-
-  return "Saved artist";
+function getArtistCategoriesText(artist) {
+  const names = artist?.categoriesRepresented?.names ?? [];
+  if (!names.length) return "No categories yet";
+  return names.join(", ");
 }
 
 /* -------------------- Search -------------------- */
@@ -133,7 +144,7 @@ const filteredFavoriteArtists = computed(() => {
   return favoriteArtists.value.filter((artist) => {
     return (
       normalize(artist.name).includes(search) ||
-      normalize(artist.description).includes(search)
+      normalize(getArtistCategoriesText(artist)).includes(search)
     );
   });
 });
@@ -220,6 +231,21 @@ async function loadFavorites() {
   } finally {
     isLoading.value = false;
   }
+}
+
+/* -------------------- Navigation -------------------- */
+function openTrackDetail(trackId) {
+  router.push({
+    name: "track-detail",
+    params: { id: trackId },
+  });
+}
+
+function openArtistDetail(artistId) {
+  router.push({
+    name: "artist-detail",
+    params: { id: artistId },
+  });
 }
 
 /* -------------------- Actions -------------------- */
@@ -353,7 +379,12 @@ onMounted(() => {
               <article
                 v-for="track in filteredFavoriteTracks"
                 :key="track.id"
-                class="favorite-track-card"
+                class="favorite-track-card favorite-track-card--link"
+                role="link"
+                tabindex="0"
+                @click="openTrackDetail(track.id)"
+                @keydown.enter.prevent="openTrackDetail(track.id)"
+                @keydown.space.prevent="openTrackDetail(track.id)"
               >
                 <div
                   class="favorite-track-card__cover"
@@ -361,8 +392,8 @@ onMounted(() => {
                 >
                   <button
                     type="button"
-                    class="favorite-card__heart is-active"
-                    @click="removeFavoriteTrack(track.id, track.title)"
+                    class="favorite-card__heart"
+                    @click.stop="removeFavoriteTrack(track.id, track.title)"
                     title="Remove from favorites"
                   >
                     ♥
@@ -375,19 +406,6 @@ onMounted(() => {
                   </p>
                   <h3>{{ track.title }}</h3>
                   <p class="favorite-track-card__artist">{{ track.artist }}</p>
-
-                  <div class="favorite-track-card__footer">
-                    <div class="favorite-track-card__rating">
-                      <span>Saved track</span>
-                    </div>
-
-                    <RouterLink
-                      :to="{ name: 'track-detail', params: { id: track.id } }"
-                      class="button button--details button--sm"
-                    >
-                      Details
-                    </RouterLink>
-                  </div>
                 </div>
               </article>
             </div>
@@ -432,7 +450,12 @@ onMounted(() => {
               <article
                 v-for="artist in filteredFavoriteArtists"
                 :key="artist.id"
-                class="favorite-artist-card"
+                class="favorite-artist-card favorite-artist-card--link"
+                role="link"
+                tabindex="0"
+                @click="openArtistDetail(artist.id)"
+                @keydown.enter.prevent="openArtistDetail(artist.id)"
+                @keydown.space.prevent="openArtistDetail(artist.id)"
               >
                 <div
                   class="favorite-artist-card__cover"
@@ -440,8 +463,8 @@ onMounted(() => {
                 >
                   <button
                     type="button"
-                    class="favorite-card__heart is-active"
-                    @click="removeFavoriteArtist(artist.id, artist.name)"
+                    class="favorite-card__heart"
+                    @click.stop="removeFavoriteArtist(artist.id, artist.name)"
                     title="Remove from favorites"
                   >
                     ♥
@@ -450,21 +473,9 @@ onMounted(() => {
 
                 <div class="favorite-artist-card__body">
                   <h3>{{ artist.name }}</h3>
-                  <p class="favorite-artist-card__genres">Favorite artist</p>
-                  <p class="favorite-artist-card__description">
-                    {{ getArtistDescription(artist) }}
+                  <p class="favorite-artist-card__genres">
+                    {{ getArtistCategoriesText(artist) }}
                   </p>
-
-                  <div class="favorite-artist-card__footer">
-                    <span>{{ getArtistFooterLabel(artist) }}</span>
-
-                    <RouterLink
-                      :to="{ name: 'artist-detail', params: { id: artist.id } }"
-                      class="button button--details button--sm"
-                    >
-                      Details
-                    </RouterLink>
-                  </div>
                 </div>
               </article>
             </div>
