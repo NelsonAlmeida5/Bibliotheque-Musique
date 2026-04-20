@@ -949,13 +949,12 @@ onMounted(() => {
                     </p>
 
                     <div class="admin-track-card__actions">
-                      <button
-                        type="button"
+                      <RouterLink
+                        :to="{ name: 'track-detail', params: { id: track.id } }"
                         class="button button--details button--sm"
-                        @click="previewTrack(track)"
                       >
                         Details
-                      </button>
+                      </RouterLink>
 
                       <button
                         type="button"
