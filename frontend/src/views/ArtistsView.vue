@@ -1,5 +1,12 @@
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+} from "vue";
 import { useRouter } from "vue-router";
 import api from "../services/api";
 
@@ -40,6 +47,12 @@ const favoriteArtistIds = ref([]);
 
 const searchQuery = ref("");
 const selectedLetter = ref("All");
+
+const ARTISTS_BATCH_SIZE = 4;
+const visibleArtistCount = ref(ARTISTS_BATCH_SIZE);
+const artistLoadTrigger = ref(null);
+
+let artistLoadObserver = null;
 
 const isLoading = ref(true);
 const errorMessage = ref("");
@@ -150,6 +163,82 @@ const filteredArtists = computed(() => {
   return result;
 });
 
+const visibleArtists = computed(() =>
+  filteredArtists.value.slice(0, visibleArtistCount.value),
+);
+
+const hasMoreArtists = computed(
+  () => visibleArtistCount.value < filteredArtists.value.length,
+);
+
+async function loadMoreArtists() {
+  if (!hasMoreArtists.value) return;
+
+  visibleArtistCount.value += ARTISTS_BATCH_SIZE;
+
+  await nextTick();
+  observeArtistLoadTrigger();
+}
+
+function disconnectArtistLoadObserver() {
+  if (artistLoadObserver) {
+    artistLoadObserver.disconnect();
+    artistLoadObserver = null;
+  }
+}
+
+function observeArtistLoadTrigger() {
+  disconnectArtistLoadObserver();
+
+  if (!artistLoadTrigger.value || !hasMoreArtists.value) return;
+
+  artistLoadObserver = new IntersectionObserver(
+    async (entries) => {
+      const entry = entries[0];
+
+      if (!entry?.isIntersecting) return;
+
+      disconnectArtistLoadObserver();
+      await loadMoreArtists();
+    },
+    {
+      root: null,
+      rootMargin: "0px 0px 320px 0px",
+      threshold: 0,
+    },
+  );
+
+  artistLoadObserver.observe(artistLoadTrigger.value);
+}
+
+watch(
+  filteredArtists,
+  async () => {
+    visibleArtistCount.value = ARTISTS_BATCH_SIZE;
+    await nextTick();
+    observeArtistLoadTrigger();
+  },
+  { flush: "post" },
+);
+
+watch(
+  visibleArtistCount,
+  async () => {
+    await nextTick();
+    observeArtistLoadTrigger();
+  },
+  { flush: "post" },
+);
+
+watch(
+  hasMoreArtists,
+  async () => {
+    await nextTick();
+    observeArtistLoadTrigger();
+  },
+  { flush: "post" },
+);
+
 async function loadArtists() {
   const response = await api.get("/artists", {
     params: { page: 1, limit: 100 },
@@ -217,8 +306,14 @@ async function toggleFavoriteArtist(artist) {
   }
 }
 
-onMounted(() => {
-  loadPage();
+onMounted(async () => {
+  await loadPage();
+  await nextTick();
+  observeArtistLoadTrigger();
+});
+
+onBeforeUnmount(() => {
+  disconnectArtistLoadObserver();
 });
 </script>
 
@@ -272,9 +367,9 @@ onMounted(() => {
         </div>
 
         <template v-else-if="filteredArtists.length">
-          <div class="artists-grid">
+          <TransitionGroup name="feed-fade" tag="div" class="artists-grid">
             <article
-              v-for="artist in filteredArtists"
+              v-for="artist in visibleArtists"
               :key="artist.id"
               class="artist-card artist-card--link"
               role="link"
@@ -310,7 +405,14 @@ onMounted(() => {
                 </p>
               </div>
             </article>
-          </div>
+          </TransitionGroup>
+
+          <div
+            v-if="hasMoreArtists"
+            ref="artistLoadTrigger"
+            class="artists-load-trigger"
+            aria-hidden="true"
+          ></div>
         </template>
 
         <div v-else class="artists-empty-state">
