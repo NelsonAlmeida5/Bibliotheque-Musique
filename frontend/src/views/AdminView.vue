@@ -648,7 +648,7 @@ onMounted(() => {
               </form>
             </section>
 
-            <section class="admin-panel">
+            <section class="admin-panel admin-panel--artists">
               <div class="admin-panel__header">
                 <h2>Artists</h2>
                 <p>Search, edit, and remove official artists.</p>
@@ -753,7 +753,7 @@ onMounted(() => {
               </form>
             </section>
 
-            <section class="admin-panel">
+            <section class="admin-panel admin-panel--categories">
               <div class="admin-panel__header">
                 <h2>Categories</h2>
                 <p>Search, edit, and remove catalog categories.</p>
@@ -863,16 +863,13 @@ onMounted(() => {
 
                 <div class="admin-form__grid">
                   <div class="admin-form__field">
-                    <label for="track-artist-select">Artist</label>
-                    <select
-                      id="track-artist-select"
-                      v-model="trackForm.artistId"
-                    >
+                    <label for="track-artist">Artist</label>
+                    <select id="track-artist" v-model="trackForm.artistId">
                       <option value="">Select an artist</option>
                       <option
                         v-for="artist in artists"
                         :key="artist.id"
-                        :value="String(artist.id)"
+                        :value="artist.id"
                       >
                         {{ artist.name }}
                       </option>
@@ -880,16 +877,13 @@ onMounted(() => {
                   </div>
 
                   <div class="admin-form__field">
-                    <label for="track-category-select">Category</label>
-                    <select
-                      id="track-category-select"
-                      v-model="trackForm.categoryId"
-                    >
+                    <label for="track-category">Category</label>
+                    <select id="track-category" v-model="trackForm.categoryId">
                       <option value="">Select a category</option>
                       <option
                         v-for="category in categories"
                         :key="category.id"
-                        :value="String(category.id)"
+                        :value="category.id"
                       >
                         {{ category.name }}
                       </option>
@@ -942,20 +936,26 @@ onMounted(() => {
 
                   <div class="admin-track-card__body">
                     <h3>{{ track.title }}</h3>
+
                     <p class="admin-track-card__meta-line">
-                      {{ track.artistName }} · {{ track.categoryName }}
+                      {{ track.artist?.name || "Unknown artist" }}
+                      <span v-if="track.category?.name">
+                        · {{ track.category.name }}
+                      </span>
                     </p>
+
                     <p class="admin-track-card__description">
-                      {{ track.description || "No description provided." }}
+                      {{ track.description || "No description provided yet." }}
                     </p>
 
                     <div class="admin-track-card__actions">
-                      <RouterLink
-                        :to="{ name: 'track-detail', params: { id: track.id } }"
+                      <button
+                        type="button"
                         class="button button--details button--sm"
+                        @click="previewTrack(track)"
                       >
                         Details
-                      </RouterLink>
+                      </button>
 
                       <button
                         type="button"
