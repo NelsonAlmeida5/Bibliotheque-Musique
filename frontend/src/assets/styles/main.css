@@ -118,11 +118,13 @@ img {
   color: var(--ink);
 }
 
-.navbar__link.is-active {
+.navbar__link.is-active,
+.navbar__auth-link.is-active {
   color: var(--ink);
 }
 
-.navbar__link.is-active::after {
+.navbar__link.is-active::after,
+.navbar__auth-link.is-active::after {
   content: "";
   position: absolute;
   left: 0;
