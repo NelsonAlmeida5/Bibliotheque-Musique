@@ -1,5 +1,12 @@
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+} from "vue";
 import { useRouter } from "vue-router";
 import api from "../services/api";
 
@@ -15,6 +22,12 @@ const searchQuery = ref("");
 const artistQuery = ref("");
 const selectedCategories = ref([]);
 const selectedSort = ref("Most recent");
+
+const TRACKS_BATCH_SIZE = 12;
+const visibleTrackCount = ref(TRACKS_BATCH_SIZE);
+const trackLoadTrigger = ref(null);
+
+let trackLoadObserver = null;
 
 const isLoading = ref(true);
 const errorMessage = ref("");
@@ -205,6 +218,56 @@ const filteredTracks = computed(() => {
   return result;
 });
 
+const visibleTracks = computed(() =>
+  filteredTracks.value.slice(0, visibleTrackCount.value),
+);
+
+const hasMoreTracks = computed(
+  () => visibleTrackCount.value < filteredTracks.value.length,
+);
+
+function loadMoreTracks() {
+  if (!hasMoreTracks.value) return;
+  visibleTrackCount.value += TRACKS_BATCH_SIZE;
+}
+
+function disconnectTrackLoadObserver() {
+  if (trackLoadObserver) {
+    trackLoadObserver.disconnect();
+    trackLoadObserver = null;
+  }
+}
+
+function observeTrackLoadTrigger() {
+  disconnectTrackLoadObserver();
+
+  if (!trackLoadTrigger.value || !hasMoreTracks.value) return;
+
+  trackLoadObserver = new IntersectionObserver(
+    (entries) => {
+      if (entries[0]?.isIntersecting) {
+        loadMoreTracks();
+      }
+    },
+    {
+      root: null,
+      rootMargin: "0px 0px 260px 0px",
+      threshold: 0.01,
+    },
+  );
+
+  trackLoadObserver.observe(trackLoadTrigger.value);
+}
+
+watch(filteredTracks, () => {
+  visibleTrackCount.value = TRACKS_BATCH_SIZE;
+});
+
+watch([hasMoreTracks, viewMode], async () => {
+  await nextTick();
+  observeTrackLoadTrigger();
+});
+
 async function loadTracks() {
   const tracksResponse = await api.get("/tracks", {
     params: { page: 1, limit: 100 },
@@ -287,8 +350,14 @@ async function toggleFavoriteTrack(track) {
   }
 }
 
-onMounted(() => {
-  loadCatalogData();
+onMounted(async () => {
+  await loadCatalogData();
+  await nextTick();
+  observeTrackLoadTrigger();
+});
+
+onBeforeUnmount(() => {
+  disconnectTrackLoadObserver();
 });
 </script>
 
@@ -329,9 +398,9 @@ onMounted(() => {
       <div class="container catalog-layout">
         <aside class="catalog-sidebar">
           <div class="catalog-filter-block">
-            <label class="catalog-filter-label" for="track-search"
-              >Search</label
-            >
+            <label class="catalog-filter-label" for="track-search">
+              Search
+            </label>
             <input
               id="track-search"
               v-model="searchQuery"
@@ -404,10 +473,15 @@ onMounted(() => {
           </div>
 
           <div v-else-if="filteredTracks.length">
-            <div v-if="viewMode === 'grid'" class="catalog-grid">
+            <TransitionGroup
+              v-if="viewMode === 'grid'"
+              name="feed-fade"
+              tag="div"
+              class="catalog-grid"
+            >
               <article
-                v-for="track in filteredTracks"
-                :key="track.id"
+                v-for="track in visibleTracks"
+                :key="`grid-${track.id}`"
                 class="catalog-card"
                 @click="navigateToTrack(track.id)"
               >
@@ -459,12 +533,17 @@ onMounted(() => {
                   </div>
                 </div>
               </article>
-            </div>
+            </TransitionGroup>
 
-            <div v-else class="catalog-list">
+            <TransitionGroup
+              v-else
+              name="feed-fade"
+              tag="div"
+              class="catalog-list"
+            >
               <article
-                v-for="track in filteredTracks"
-                :key="track.id"
+                v-for="track in visibleTracks"
+                :key="`list-${track.id}`"
                 class="catalog-list-row"
                 @click="navigateToTrack(track.id)"
               >
@@ -507,6 +586,18 @@ onMounted(() => {
                   {{ isTrackFavorite(track.id) ? "♥" : "♡" }}
                 </button>
               </article>
+            </TransitionGroup>
+
+            <div
+              v-if="filteredTracks.length > TRACKS_BATCH_SIZE"
+              class="catalog-load-state"
+            >
+              <div
+                v-if="hasMoreTracks"
+                ref="trackLoadTrigger"
+                class="catalog-load-trigger"
+                aria-hidden="true"
+              ></div>
             </div>
           </div>
 
