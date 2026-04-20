@@ -2662,6 +2662,11 @@ img {
   display: grid;
   grid-template-columns: 420px minmax(0, 1fr);
   gap: 30px;
+  align-items: start;
+}
+
+.admin-crud-layout > .admin-panel {
+  align-self: start;
 }
 
 .admin-panel {
