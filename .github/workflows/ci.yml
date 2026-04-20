@@ -31,7 +31,7 @@ jobs:
         run: npm run build
 
   backend:
-    name: Backend build
+    name: Backend checks
     runs-on: ubuntu-latest
 
     defaults:
@@ -51,6 +51,12 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
 
       - name: Build
         run: npm run build
