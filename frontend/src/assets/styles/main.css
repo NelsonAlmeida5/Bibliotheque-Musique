@@ -724,13 +724,6 @@ img {
   font-size: 0.92rem;
 }
 
-.catalog-list-row__artist {
-  margin: 6px 0 0;
-  color: var(--warm-gray);
-  font-size: 0.95rem;
-  line-height: 1.2;
-}
-
 .catalog-list-row__category {
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -817,6 +810,7 @@ img {
 }
 
 .catalog-card__body {
+  min-width: 0;
   padding: 16px 16px 14px;
 }
 
@@ -835,12 +829,6 @@ img {
   line-height: 1.15;
 }
 
-.catalog-card__artist {
-  margin: 6px 0 0;
-  color: var(--warm-gray);
-  font-size: 0.95rem;
-}
-
 .catalog-card__footer {
   margin-top: 18px;
   display: flex;
@@ -855,6 +843,19 @@ img {
   gap: 10px;
   color: var(--warm-gray);
   font-size: 0.92rem;
+}
+
+.catalog-list-row__artist,
+.catalog-card__artist {
+  display: block;
+  max-width: 100%;
+  margin: 6px 0 0;
+  color: var(--warm-gray);
+  font-size: 0.95rem;
+  line-height: 1.2;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 /* End CatalogView */
