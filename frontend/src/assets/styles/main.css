@@ -2032,7 +2032,7 @@ img {
   right: 0;
   z-index: 20;
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 0px;
   background: var(--surface-1);
   box-shadow: var(--shadow-soft);
   overflow: hidden;
@@ -2807,10 +2807,11 @@ img {
 }
 
 .admin-item-card__body {
+  min-width: 0;
   padding: 16px 16px 14px 0;
 }
 
-.admin-item-card__body h3 {
+.admin-item-card__title {
   margin: 0;
   font-size: 1.6rem;
   font-weight: 500;
@@ -2950,6 +2951,26 @@ img {
   margin: 0;
   color: #e0b4bd;
   line-height: 1.6;
+}
+
+.admin-item-card__body,
+.admin-track-card__body {
+  min-width: 0;
+}
+
+.admin-item-card__title,
+.admin-track-card__title {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.admin-track-card__meta-line {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 /* End AdminView */
@@ -4007,7 +4028,7 @@ img {
   padding: 16px;
 }
 
-.admin-track-card__body h3 {
+.admin-track-card__title {
   margin: 0;
   font-size: 1.18rem;
   font-weight: 500;
