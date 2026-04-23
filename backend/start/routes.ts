@@ -18,7 +18,7 @@ const HomeController = () => import('#controllers/home_controller')
 |--------------------------------------------------------------------------
 */
 router.get('/', async () => {
-  return { message: 'API Bibliotheque Musique is running - CD test' }
+  return { message: 'API Bibliotheque Musique is running' }
 })
 
 router.get('/home', [HomeController, 'index'])
