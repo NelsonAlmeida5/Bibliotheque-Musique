@@ -113,7 +113,7 @@ async function handleLogout() {
             class="navbar__auth-link"
             :class="{ 'is-active': isAdminActive }"
           >
-            Admin
+            Dashboard
           </RouterLink>
 
           <div class="navbar__avatar" :title="username">
