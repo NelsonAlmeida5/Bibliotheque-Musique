@@ -209,7 +209,18 @@ const normalizedEmbedUrl = computed(() => {
   if (!track.value?.embedUrl) return "";
 
   const videoId = extractYouTubeVideoId(track.value.embedUrl);
-  if (videoId) return `https://www.youtube.com/embed/${videoId}`;
+
+  if (videoId) {
+    const params = new URLSearchParams({
+      rel: "0",
+      modestbranding: "1",
+      playsinline: "1",
+      enablejsapi: "1",
+      origin: window.location.origin,
+    });
+
+    return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
+  }
 
   return track.value.embedUrl;
 });
@@ -606,6 +617,7 @@ watch(
                 :src="normalizedEmbedUrl"
                 title="Track player"
                 frameborder="0"
+                referrerpolicy="strict-origin-when-cross-origin"
                 allow="
                   accelerometer;
                   autoplay;
@@ -613,6 +625,7 @@ watch(
                   encrypted-media;
                   gyroscope;
                   picture-in-picture;
+                  web-share;
                 "
                 allowfullscreen
               ></iframe>
