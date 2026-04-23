@@ -1,2 +1,4 @@
 .vscode/settings.json
 backend/.env.backup-local
+backend/backend-azure-deploy.zip
+frontend/.env
