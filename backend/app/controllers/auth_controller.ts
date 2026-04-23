@@ -1,4 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import hash from '@adonisjs/core/services/hash'
 import { loginValidator, registerValidator } from '#validators/auth'
 import User from '#models/user'
 
@@ -31,10 +32,29 @@ export default class AuthController {
     })
   }
 
-  async login({ request, auth }: HttpContext) {
-    const { email, password } = await request.validateUsing(loginValidator)
+  async login({ request, auth, response }: HttpContext) {
+    const { identifier, password } = await request.validateUsing(loginValidator)
 
-    const user = await User.verifyCredentials(email, password)
+    let user = await User.findBy('email', identifier.trim())
+
+    if (!user) {
+      user = await User.findBy('username', identifier.trim())
+    }
+
+    if (!user) {
+      return response.unauthorized({
+        message: 'Invalid email/username or password',
+      })
+    }
+
+    const isPasswordValid = await hash.verify(user.password, password)
+
+    if (!isPasswordValid) {
+      return response.unauthorized({
+        message: 'Invalid email/username or password',
+      })
+    }
+
     const token = await auth.use('api').createToken(user)
 
     return {

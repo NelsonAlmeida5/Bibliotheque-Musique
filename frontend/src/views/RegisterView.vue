@@ -1,51 +1,73 @@
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+import { useAuthStore } from "../stores/auth";
 
-const router = useRouter()
-const authStore = useAuthStore()
+const router = useRouter();
+const authStore = useAuthStore();
 
-const username = ref('')
-const email = ref('')
-const password = ref('')
-const passwordConfirmation = ref('')
+const username = ref("");
+const email = ref("");
+const password = ref("");
+const passwordConfirmation = ref("");
 
-const errorMessage = ref('')
-const successMessage = ref('')
-const isLoading = ref(false)
+const errorMessage = ref("");
+const successMessage = ref("");
+const isLoading = ref(false);
 
-async function handleRegister() {
-  errorMessage.value = ''
-  successMessage.value = ''
+function extractApiErrorMessage(error, fallbackMessage) {
+  const responseData = error?.response?.data;
 
-  if (password.value !== passwordConfirmation.value) {
-    errorMessage.value = 'Passwords do not match.'
-    return
+  if (Array.isArray(responseData?.errors) && responseData.errors.length > 0) {
+    return responseData.errors[0]?.message || fallbackMessage;
   }
 
-  isLoading.value = true
+  if (
+    typeof responseData?.message === "string" &&
+    responseData.message.trim()
+  ) {
+    return responseData.message;
+  }
+
+  if (typeof error?.message === "string" && error.message.trim()) {
+    return error.message;
+  }
+
+  return fallbackMessage;
+}
+
+async function handleRegister() {
+  errorMessage.value = "";
+  successMessage.value = "";
+
+  if (password.value !== passwordConfirmation.value) {
+    errorMessage.value = "Passwords do not match.";
+    return;
+  }
+
+  isLoading.value = true;
 
   try {
     await authStore.register({
       username: username.value,
       email: email.value,
       password: password.value,
-    })
+    });
 
-    successMessage.value = 'Account created successfully. You can now log in.'
+    successMessage.value = "Account created successfully. You can now log in.";
 
     setTimeout(() => {
-      router.push('/login')
-    }, 900)
+      router.push("/login");
+    }, 900);
   } catch (error) {
-    console.error(error)
+    console.error(error);
 
-    errorMessage.value =
-      error?.response?.data?.message ||
-      'Registration failed. Please check your information.'
+    errorMessage.value = extractApiErrorMessage(
+      error,
+      "Registration failed. Please check your information.",
+    );
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
 }
 </script>
@@ -119,8 +141,12 @@ async function handleRegister() {
             {{ successMessage }}
           </p>
 
-          <button class="button button--primary auth-submit" type="submit" :disabled="isLoading">
-            {{ isLoading ? 'Creating account...' : 'Create account' }}
+          <button
+            class="button button--primary auth-submit"
+            type="submit"
+            :disabled="isLoading"
+          >
+            {{ isLoading ? "Creating account..." : "Create account" }}
           </button>
         </form>
 

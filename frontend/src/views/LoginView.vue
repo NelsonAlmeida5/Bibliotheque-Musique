@@ -6,25 +6,46 @@ import { useAuthStore } from "../stores/auth";
 const router = useRouter();
 const authStore = useAuthStore();
 
-const email = ref("");
+const identifier = ref("");
 const password = ref("");
 const errorMessage = ref("");
 const isLoading = ref(false);
+
+function extractApiErrorMessage(error, fallbackMessage) {
+  const responseData = error?.response?.data;
+
+  if (Array.isArray(responseData?.errors) && responseData.errors.length > 0) {
+    return responseData.errors[0]?.message || fallbackMessage;
+  }
+
+  if (
+    typeof responseData?.message === "string" &&
+    responseData.message.trim()
+  ) {
+    return responseData.message;
+  }
+
+  if (typeof error?.message === "string" && error.message.trim()) {
+    return error.message;
+  }
+
+  return fallbackMessage;
+}
 
 async function handleLogin() {
   errorMessage.value = "";
   isLoading.value = true;
 
   try {
-    await authStore.login(email.value, password.value);
+    await authStore.login(identifier.value, password.value);
     router.push("/");
   } catch (error) {
     console.error(error);
 
-    errorMessage.value =
-      error?.response?.data?.message ||
-      error?.message ||
-      "Login failed. Please check your email and password.";
+    errorMessage.value = extractApiErrorMessage(
+      error,
+      "Login failed. Please check your email/username and password.",
+    );
   } finally {
     isLoading.value = false;
   }
@@ -45,13 +66,13 @@ async function handleLogin() {
 
         <form class="auth-form" @submit.prevent="handleLogin">
           <div class="auth-field">
-            <label for="email">Email</label>
+            <label for="identifier">Email or username</label>
             <input
-              id="email"
-              v-model="email"
-              type="email"
-              placeholder="Enter your email"
-              autocomplete="email"
+              id="identifier"
+              v-model="identifier"
+              type="text"
+              placeholder="Enter your email or username"
+              autocomplete="username"
               required
             />
           </div>
